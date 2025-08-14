@@ -1,13 +1,17 @@
 {
-  "/not-found": "app/not-found.js",
+  "/_not-found": "app/_not-found.js",
+  "/admin/equipment-colors/page": "app/admin/equipment-colors/page.js",
+  "/api/admin/reset/route": "app/api/admin/reset/route.js",
+  "/api/admin/initialize/route": "app/api/admin/initialize/route.js",
+  "/api/bookings/[id]/route": "app/api/bookings/[id]/route.js",
+  "/api/bookings/route": "app/api/bookings/route.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/admin/dashboard/page": "app/admin/dashboard/page.js",
+  "/api/equipment/route": "app/api/equipment/route.js",
+  "/my-bookings/page": "app/my-bookings/page.js",
+  "/api/equipment/[id]/route": "app/api/equipment/[id]/route.js",
+  "/auth/signin/page": "app/auth/signin/page.js",
   "/demo/page": "app/demo/page.js",
   "/page": "app/page.js",
-  "/api/bookings/route": "app/api/bookings/route.js",
-  "/api/equipment/route": "app/api/equipment/route.js",
-  "/admin/dashboard/page": "app/admin/dashboard/page.js",
-  "/api/bookings/[id]/route": "app/api/bookings/[id]/route.js",
-  "/my-bookings/page": "app/my-bookings/page.js",
-  "/admin/equipment-colors/page": "app/admin/equipment-colors/page.js",
-  "/api/equipment/[id]/route": "app/api/equipment/[id]/route.js"
+  "/api/init/route": "app/api/init/route.js"
 }
