@@ -12,6 +12,7 @@ export default async function AdminDashboard() {
   if (!session || session.user.role !== 'ADMIN') {
     redirect('/')
   }
+  
 
   return (
     <div className="min-h-screen bg-gray-50">
