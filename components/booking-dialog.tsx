@@ -162,7 +162,7 @@ export function BookingDialog({
           </div>
           
           <div>
-            <Label htmlFor="purpose">使用目的</Label>
+            <Label htmlFor="purpose">單位/所屬PI</Label>
             <Textarea
               id="purpose"
               placeholder="請說明使用設備的目的和實驗內容..."

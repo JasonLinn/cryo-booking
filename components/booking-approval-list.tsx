@@ -175,7 +175,7 @@ export function BookingApprovalList() {
               </div>
               
               <div className="mt-4">
-                <h4 className="font-medium text-gray-900">使用目的</h4>
+                <h4 className="font-medium text-gray-900">單位/所屬PI</h4>
                 <p className="text-sm text-gray-600 mt-1">
                   {booking.purpose}
                 </p>

@@ -168,9 +168,9 @@ export function BookingDetailsDialog({
             </div>
           </div>
 
-          {/* 使用目的 */}
+          {/* 單位/所屬PI */}
           <div className="space-y-2">
-            <h3 className="font-medium">使用目的</h3>
+            <h3 className="font-medium">單位/所屬PI</h3>
             <div className="bg-gray-50 p-3 rounded-lg">
               <p className="text-sm">{booking.purpose}</p>
             </div>

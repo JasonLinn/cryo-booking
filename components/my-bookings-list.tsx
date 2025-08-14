@@ -162,9 +162,9 @@ export function MyBookingsList() {
               </p>
             </div>
 
-            {/* 使用目的 */}
+            {/* 單位/所屬PI */}
             <div>
-              <h4 className="font-medium text-gray-900 mb-2">使用目的</h4>
+              <h4 className="font-medium text-gray-900 mb-2">單位/所屬PI</h4>
               <p className="text-sm text-gray-600">
                 {booking.purpose}
               </p>

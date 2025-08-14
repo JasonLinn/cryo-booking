@@ -6,7 +6,6 @@ import { authOptions } from '@/lib/auth'
 export async function GET() {
   try {
     const equipment = await prisma.equipment.findMany({
-      where: { isActive: true },
       include: {
         _count: {
           select: {
@@ -46,13 +45,15 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await request.json()
-    const { name, description, location } = data
+    const { name, description, location, color } = data
 
     const equipment = await prisma.equipment.create({
       data: {
         name,
         description,
         location,
+        color,
+        isActive: true,
       }
     })
 
