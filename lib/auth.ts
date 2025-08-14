@@ -2,7 +2,7 @@ import { NextAuthOptions } from 'next-auth'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import GoogleProvider from 'next-auth/providers/google'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { prisma } from './db'
+import { prisma } from './prisma'
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -20,56 +20,36 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
 
-        // 預設管理員帳號
-        if (credentials.email === 'admin@example.com' && credentials.password === 'admin123') {
-          let user = await prisma.user.findUnique({
-            where: { email: credentials.email }
-          })
+        // 查找用戶
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email }
+        })
 
-          if (!user) {
-            user = await prisma.user.create({
-              data: {
-                email: credentials.email,
-                name: '系統管理員',
-                role: 'ADMIN'
-              }
-            })
-          }
+        if (!user) return null
 
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-          }
-        }
-
-        // 測試使用者帳號
-        if (credentials.email === 'user@example.com' && credentials.password === 'user123') {
-          let user = await prisma.user.findUnique({
-            where: { email: credentials.email }
-          })
-
-          if (!user) {
-            user = await prisma.user.create({
-              data: {
-                email: credentials.email,
-                name: '測試使用者',
-                role: 'USER'
-              }
-            })
-          }
-
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
+        // 檢查密碼
+        if (user.password) {
+          // 如果用戶有密碼，使用 bcrypt 驗證
+          const bcrypt = await import('bcryptjs')
+          const isValid = await bcrypt.default.compare(credentials.password, user.password)
+          if (!isValid) return null
+        } else {
+          // 舊版本相容性：檢查硬編碼密碼
+          if (credentials.email === 'admin@example.com' && credentials.password === 'admin123') {
+            // 允許通過
+          } else if (credentials.email === 'user@example.com' && credentials.password === 'user123') {
+            // 允許通過
+          } else {
+            return null
           }
         }
 
-        // 無效的憑證
-        return null
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        }
       }
     })
   ],

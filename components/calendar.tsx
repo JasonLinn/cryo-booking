@@ -8,6 +8,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday
 import { zhTW } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight, Clock } from 'lucide-react'
 import { BookingDialog } from './booking-dialog'
+import { BookingDetailsDialog } from './booking-details-dialog'
 import { isPublicHoliday, isBookingAvailable } from '@/lib/utils'
 
 interface Equipment {
@@ -17,18 +18,23 @@ interface Equipment {
   location?: string
 }
 
+interface User {
+  id: string
+  name?: string
+  email: string
+}
+
 interface Booking {
   id: string
   startTime: Date
   endTime: Date
   equipment: Equipment
-  user?: {
-    name?: string
-    email: string
-  }
+  user?: User
   guestName?: string
   purpose: string
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  rejectionReason?: string
+  createdAt?: Date
 }
 
 // 設備顏色映射
@@ -59,6 +65,8 @@ export function Calendar() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null)
   const [showBookingDialog, setShowBookingDialog] = useState(false)
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
+  const [showBookingDetails, setShowBookingDetails] = useState(false)
 
   useEffect(() => {
     fetchEquipment()
@@ -79,7 +87,8 @@ export function Calendar() {
 
   const fetchBookings = async () => {
     try {
-      const response = await fetch('/api/bookings')
+      // 獲取所有預約（包含所有狀態），讓使用者能看到完整的預約情況
+      const response = await fetch('/api/bookings?public=true&status=all')
       if (response.ok) {
         const data = await response.json()
         const processedBookings = data.map((booking: any) => ({
@@ -116,6 +125,12 @@ export function Calendar() {
   const handleEquipmentSelect = (eq: Equipment) => {
     setSelectedEquipment(eq)
     setShowBookingDialog(true)
+  }
+
+  const handleBookingClick = (booking: Booking, e: React.MouseEvent) => {
+    e.stopPropagation() // 防止觸發日期點擊
+    setSelectedBooking(booking)
+    setShowBookingDetails(true)
   }
 
   const previousMonth = () => {
@@ -222,8 +237,11 @@ export function Calendar() {
                 {dayBookings.slice(0, 3).map((booking) => (
                   <div
                     key={booking.id}
-                    className={`text-xs p-1 rounded border ${getEquipmentColor(booking.equipment.id, true)} cursor-pointer hover:opacity-80`}
+                    className={`text-xs p-1 rounded border cursor-pointer hover:opacity-80 transition-opacity ${getEquipmentColor(booking.equipment.id, true)} ${
+                      booking.status === 'REJECTED' ? 'opacity-60' : ''
+                    }`}
                     title={`${booking.equipment.name} - ${format(booking.startTime, 'HH:mm')} (${booking.status === 'APPROVED' ? '已核准' : booking.status === 'PENDING' ? '待審核' : '已拒絕'})`}
+                    onClick={(e) => handleBookingClick(booking, e)}
                   >
                     <div className="flex items-center gap-1 truncate">
                       <div className={`w-2 h-2 rounded-full ${getEquipmentColor(booking.equipment.id)}`}></div>
@@ -232,9 +250,15 @@ export function Calendar() {
                     <div className="flex items-center gap-1 text-xs opacity-75">
                       <Clock className="h-2.5 w-2.5" />
                       {format(booking.startTime, 'HH:mm')}
-                      {booking.status === 'PENDING' && <span className="text-orange-600">●</span>}
-                      {booking.status === 'APPROVED' && <span className="text-green-600">●</span>}
-                      {booking.status === 'REJECTED' && <span className="text-red-600">●</span>}
+                      <span className={`text-xs font-medium ${
+                        booking.status === 'PENDING' ? 'text-orange-600' :
+                        booking.status === 'APPROVED' ? 'text-green-600' :
+                        'text-red-600'
+                      }`}>
+                        {booking.status === 'PENDING' && '待審'}
+                        {booking.status === 'APPROVED' && '已核准'}
+                        {booking.status === 'REJECTED' && '已拒絕'}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -269,6 +293,13 @@ export function Calendar() {
           }}
         />
       )}
+
+      {/* 預約詳情對話框 */}
+      <BookingDetailsDialog
+        booking={selectedBooking}
+        open={showBookingDetails}
+        onOpenChange={setShowBookingDetails}
+      />
     </div>
   )
 }

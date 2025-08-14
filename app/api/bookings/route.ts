@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { sendEmail, generateBookingApprovalEmail, generateBookingRejectionEmail } from '@/lib/email'
@@ -8,29 +8,43 @@ import { isBookingAvailable } from '@/lib/utils'
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      return NextResponse.json(
-        { error: '請先登入' },
-        { status: 401 }
-      )
-    }
-
     const url = new URL(request.url)
     const status = url.searchParams.get('status')
     const userId = url.searchParams.get('userId')
+    const publicView = url.searchParams.get('public') === 'true'
 
     const where: any = {}
     
-    if (status) {
-      where.status = status
-    }
-    
-    // 一般使用者只能看自己的預約，管理員可以看所有預約
-    if (session.user.role !== 'ADMIN') {
-      where.userId = session.user.id
-    } else if (userId) {
-      where.userId = userId
+    // 如果是公開檢視（用於日曆顯示）
+    if (publicView) {
+      if (status === 'all') {
+        // 顯示所有狀態的預約，不設定狀態限制
+      } else if (status) {
+        // 顯示指定狀態的預約
+        where.status = status
+      } else {
+        // 默認只顯示已核准的預約
+        where.status = 'APPROVED'
+      }
+    } else {
+      // 私有檢視模式，需要登入
+      if (status) {
+        where.status = status
+      }
+      // 需要登入才能查看詳細預約資訊
+      if (!session) {
+        return NextResponse.json(
+          { error: '請先登入' },
+          { status: 401 }
+        )
+      }
+
+      // 一般使用者只能看自己的預約，管理員可以看所有預約
+      if (session.user.role !== 'ADMIN') {
+        where.userId = session.user.id
+      } else if (userId) {
+        where.userId = userId
+      }
     }
 
     const bookings = await prisma.booking.findMany({
@@ -84,6 +98,25 @@ export async function POST(request: NextRequest) {
     if (start < new Date()) {
       return NextResponse.json(
         { error: '不能預約過去的時間' },
+        { status: 400 }
+      )
+    }
+
+    // 檢查設備是否存在
+    const equipment = await prisma.equipment.findUnique({
+      where: { id: equipmentId }
+    })
+
+    if (!equipment) {
+      return NextResponse.json(
+        { error: '指定的設備不存在' },
+        { status: 400 }
+      )
+    }
+
+    if (!equipment.isActive) {
+      return NextResponse.json(
+        { error: '設備目前不可用' },
         { status: 400 }
       )
     }
