@@ -9,6 +9,7 @@ import { zhTW } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight, Clock } from 'lucide-react'
 import { BookingDialog } from './booking-dialog'
 import { BookingDetailsDialog } from './booking-details-dialog'
+import { EquipmentSelectDialog } from './equipment-select-dialog'
 import { isPublicHoliday, isBookingAvailable } from '@/lib/utils'
 
 interface Equipment {
@@ -86,6 +87,7 @@ export function Calendar() {
   const [equipment, setEquipment] = useState<Equipment[]>([])
   const [bookings, setBookings] = useState<Booking[]>([])
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null)
+  const [showEquipmentSelect, setShowEquipmentSelect] = useState(false)
   const [showBookingDialog, setShowBookingDialog] = useState(false)
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [showBookingDetails, setShowBookingDetails] = useState(false)
@@ -142,10 +144,12 @@ export function Calendar() {
 
   const handleDateClick = (date: Date) => {
     setSelectedDate(date)
+    setShowEquipmentSelect(true)
   }
 
-  const handleEquipmentSelect = (eq: Equipment) => {
+  const handleEquipmentSelected = (eq: Equipment) => {
     setSelectedEquipment(eq)
+    setShowEquipmentSelect(false)
     setShowBookingDialog(true)
   }
 
@@ -204,38 +208,6 @@ export function Calendar() {
             <span className="text-red-600">●</span> 已拒絕
           </div>
         </div>
-      </div>
-
-      {/* 設備列表 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {equipment.map((eq) => (
-          <Card 
-            key={eq.id} 
-            className={`cursor-pointer transition-colors hover:bg-gray-50 border-2 ${
-              selectedEquipment?.id === eq.id ? 'ring-2 ring-blue-500' : ''
-            }`}
-            style={{
-              borderColor: eq.color ? hexToRgba(eq.color, 0.3) : '#D1D5DB'
-            }}
-            onClick={() => handleEquipmentSelect(eq)}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3 mb-2">
-                <div 
-                  className="w-4 h-4 rounded-full border-2"
-                  style={{ 
-                    backgroundColor: eq.color || '#9CA3AF',
-                    borderColor: eq.color ? hexToRgba(eq.color, 0.5) : '#D1D5DB'
-                  }}
-                ></div>
-                <h3 className="font-medium">{eq.name}</h3>
-              </div>
-              {eq.location && (
-                <p className="text-sm text-gray-600">{eq.location}</p>
-              )}
-            </CardContent>
-          </Card>
-        ))}
       </div>
 
       {/* 日曆網格 */}
@@ -330,6 +302,17 @@ export function Calendar() {
           )
         })}
       </div>
+
+      {/* 設備選擇對話框 */}
+      {showEquipmentSelect && selectedDate && (
+        <EquipmentSelectDialog
+          equipment={equipment}
+          selectedDate={selectedDate}
+          open={showEquipmentSelect}
+          onOpenChange={setShowEquipmentSelect}
+          onEquipmentSelected={handleEquipmentSelected}
+        />
+      )}
 
       {/* 預約對話框 */}
       {showBookingDialog && selectedEquipment && selectedDate && (

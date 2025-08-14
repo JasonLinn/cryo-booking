@@ -56,10 +56,9 @@ export function BookingDialog({
     try {
       const startDateTime = new Date(selectedDate)
       const endDateTime = new Date(selectedDate)
-      
       const [startHour, startMinute] = startTime.split(':').map(Number)
       const [endHour, endMinute] = endTime.split(':').map(Number)
-      
+
       startDateTime.setHours(startHour, startMinute, 0, 0)
       endDateTime.setHours(endHour, endMinute, 0, 0)
 
@@ -72,7 +71,6 @@ export function BookingDialog({
         return
       }
 
-      // 檢查非登入使用者的必要資訊
       if (!session && (!guestName || !guestEmail)) {
         toast({
           title: '資訊不完整',
@@ -132,7 +130,6 @@ export function BookingDialog({
             預約 {equipment.name} - {format(selectedDate, 'yyyy年MM月dd日', { locale: zhTW })}
           </DialogDescription>
         </DialogHeader>
-        
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -160,7 +157,6 @@ export function BookingDialog({
               />
             </div>
           </div>
-          
           <div>
             <Label htmlFor="purpose">單位/所屬PI</Label>
             <Textarea
@@ -172,8 +168,6 @@ export function BookingDialog({
               rows={3}
             />
           </div>
-
-          {/* 非登入使用者的基本資訊表單 */}
           {!session && (
             <>
               <div>
@@ -187,7 +181,6 @@ export function BookingDialog({
                   required
                 />
               </div>
-              
               <div>
                 <Label htmlFor="guestEmail">聯絡信箱</Label>
                 <Input
@@ -201,7 +194,6 @@ export function BookingDialog({
               </div>
             </>
           )}
-
           <DialogFooter>
             <Button
               type="button"

@@ -1,12 +1,13 @@
 import { Suspense } from 'react'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+// import { getServerSession } from 'next-auth'
+// import { authOptions } from '@/lib/auth'
 import { Calendar } from '@/components/calendar'
 import { Navbar } from '@/components/navbar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default async function HomePage() {
-  const session = await getServerSession(authOptions)
+  // const session = await getServerSession(authOptions)
+  const session = null // 暫時關閉認證
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -19,8 +20,8 @@ export default async function HomePage() {
           </h1>
           <p className="text-gray-600 mt-2">
             {session 
-              ? `歡迎 ${session.user.name || session.user.email}！請選擇設備和時間進行預約。`
-              : '請選擇設備和時間進行預約。'
+              ? `歡迎！請選擇日期和設備進行預約。`
+              : '請選擇日期和設備進行預約。'
             }
           </p>
         </div>
@@ -32,7 +33,7 @@ export default async function HomePage() {
               <CardHeader>
                 <CardTitle>預約日曆</CardTitle>
                 <CardDescription>
-                  點擊日期和時間段來建立新預約
+                  點擊日期選擇設備進行預約
                 </CardDescription>
               </CardHeader>
               <CardContent>
