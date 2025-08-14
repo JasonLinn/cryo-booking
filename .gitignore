@@ -86,6 +86,10 @@ node_modules/
 *.sqlite
 *.sqlite3
 
+# Prisma
+prisma/dev.db
+prisma/dev.db-journal
+
 # OS generated files
 .DS_Store
 .DS_Store?

@@ -39,26 +39,41 @@ export async function GET() {
       })
     }
 
-    // 建立時間段
+    // 建立時間段 (週一到週五，9AM-6PM)
     const timeSlots = []
-    for (let hour = 9; hour < 18; hour++) {
-      timeSlots.push({
-        startTime: `${hour.toString().padStart(2, '0')}:00`,
-        endTime: `${(hour + 1).toString().padStart(2, '0')}:00`,
-      })
+    
+    // 為每個設備建立時間段
+    for (const equipment of equipmentData) {
+      // 週一到週五 (1-5)
+      for (let dayOfWeek = 1; dayOfWeek <= 5; dayOfWeek++) {
+        // 9AM to 6PM (每小時一個時段)
+        for (let hour = 9; hour < 18; hour++) {
+          timeSlots.push({
+            equipmentId: equipment.id,
+            dayOfWeek: dayOfWeek,
+            startHour: hour,
+            endHour: hour + 1,
+            isActive: true,
+          })
+        }
+      }
     }
 
     for (const slot of timeSlots) {
-      await prisma.timeSlot.upsert({
+      const existing = await prisma.timeSlot.findFirst({
         where: {
-          startTime_endTime: {
-            startTime: slot.startTime,
-            endTime: slot.endTime,
-          }
-        },
-        update: slot,
-        create: slot,
-      })
+          equipmentId: slot.equipmentId,
+          dayOfWeek: slot.dayOfWeek,
+          startHour: slot.startHour,
+          endHour: slot.endHour,
+        }
+      });
+      
+      if (!existing) {
+        await prisma.timeSlot.create({
+          data: slot,
+        });
+      }
     }
 
     return Response.json({ 

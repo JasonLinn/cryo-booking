@@ -7,22 +7,30 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 model User {
   id       String @id @default(cuid())
   email    String @unique
   name     String?
-  role     String @default("USER") // USER, ADMIN
-  image    String?
+  role     String @default("USER") // "USER" | "ADMIN"
+  password String?
+  
+  // NextAuth 相關欄位
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  
+  // 預約相關
   bookings Booking[]
-  accounts Account[]
-  sessions Session[]
-
-  @@map("users")
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
+// NextAuth 必要的 models
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -40,7 +48,6 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
-  @@map("accounts")
 }
 
 model Session {
@@ -49,8 +56,6 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("sessions")
 }
 
 model VerificationToken {
@@ -59,50 +64,61 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
-  @@map("verificationtokens")
 }
 
+// 業務相關 models
 model Equipment {
-  id          String    @id @default(cuid())
+  id          String @id @default(cuid())
   name        String
   description String?
   location    String?
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  bookings    Booking[]
-
-  @@map("equipment")
+  isActive    Boolean @default(true)
+  
+  bookings Booking[]
+  timeSlots TimeSlot[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model TimeSlot {
-  id        String    @id @default(cuid())
-  startTime String    // Format: "HH:MM"
-  endTime   String    // Format: "HH:MM"
-  bookings  Booking[]
-
-  @@unique([startTime, endTime])
-  @@map("time_slots")
+  id          String @id @default(cuid())
+  equipmentId String
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  
+  dayOfWeek   Int     // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  startHour   Int     // 0-23
+  endHour     Int     // 0-23
+  isActive    Boolean @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Booking {
-  id          String   @id @default(cuid())
-  userId      String?
+  id          String @id @default(cuid())
   equipmentId String
-  timeSlotId  String?
-  startTime   DateTime
-  endTime     DateTime
-  purpose     String
-  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED, CANCELLED
-  adminNotes  String?  // Admin can add notes when approving/rejecting
-  guestName   String?  // For non-authenticated users
-  guestEmail  String?  // For non-authenticated users
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user      User?      @relation(fields: [userId], references: [id])
-  equipment Equipment  @relation(fields: [equipmentId], references: [id])
-  timeSlot  TimeSlot?  @relation(fields: [timeSlotId], references: [id])
-
-  @@map("bookings")
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  
+  userId    String?
+  user      User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  // 訪客預約欄位
+  guestName  String?
+  guestEmail String?
+  
+  startTime DateTime
+  endTime   DateTime
+  purpose   String
+  status    String @default("PENDING") // "PENDING" | "APPROVED" | "REJECTED"
+  
+  // 審核資訊
+  approvedAt   DateTime?
+  approvedBy   String?
+  rejectedAt   DateTime?
+  rejectedBy   String?
+  rejectionReason String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

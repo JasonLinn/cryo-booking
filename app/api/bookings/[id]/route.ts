@@ -32,7 +32,7 @@ export async function PATCH(
       where: { id: params.id },
       data: {
         status,
-        adminNotes,
+        rejectionReason: adminNotes,
         updatedAt: new Date()
       },
       include: {
