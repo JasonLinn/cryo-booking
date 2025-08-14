@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, isSameMonth, isWeekend, startOfWeek, endOfWeek } from 'date-fns'
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, isSameMonth, isWeekend, startOfWeek, endOfWeek, addWeeks, subWeeks, startOfDay, addDays, subDays } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Clock } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Clock, Calendar as CalendarIcon, Grid3x3, LayoutGrid } from 'lucide-react'
 import { BookingDialog } from './booking-dialog'
 import { BookingDetailsDialog } from './booking-details-dialog'
 import { EquipmentSelectDialog } from './equipment-select-dialog'
@@ -38,6 +38,8 @@ interface Booking {
   rejectionReason?: string
   createdAt?: Date
 }
+
+type ViewType = 'month' | 'week' | 'day'
 
 // 取得設備顏色 - 使用資料庫顏色或預設顏色
 function getEquipmentColor(equipment: Equipment | { id: string; color?: string }, isLight: boolean = false) {
@@ -82,7 +84,8 @@ function hexToRgba(hex: string, alpha: number = 1): string {
 }
 
 export function Calendar() {
-  const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [viewType, setViewType] = useState<ViewType>('month')
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [equipment, setEquipment] = useState<Equipment[]>([])
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -95,7 +98,7 @@ export function Calendar() {
   useEffect(() => {
     fetchEquipment()
     fetchBookings()
-  }, [currentMonth])
+  }, [currentDate, viewType])
 
   const fetchEquipment = async () => {
     try {
@@ -127,8 +130,36 @@ export function Calendar() {
     }
   }
 
-  const monthStart = startOfMonth(currentMonth)
-  const monthEnd = endOfMonth(currentMonth)
+  // 根據視圖類型獲取日期範圍
+  const getDateRange = () => {
+    switch (viewType) {
+      case 'month':
+        const monthStart = startOfMonth(currentDate)
+        const monthEnd = endOfMonth(currentDate)
+        const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 })
+        const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 })
+        return { start: calendarStart, end: calendarEnd }
+      
+      case 'week':
+        const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 })
+        const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 })
+        return { start: weekStart, end: weekEnd }
+      
+      case 'day':
+        const dayStart = startOfDay(currentDate)
+        const dayEnd = startOfDay(currentDate)
+        return { start: dayStart, end: dayEnd }
+      
+      default:
+        return { start: currentDate, end: currentDate }
+    }
+  }
+
+  const dateRange = getDateRange()
+  const daysInView = eachDayOfInterval({ start: dateRange.start, end: dateRange.end })
+
+  const monthStart = startOfMonth(currentDate)
+  const monthEnd = endOfMonth(currentDate)
   
   // 取得完整的日曆週期 (包含上個月末和下個月初的日期)
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 }) // 0 = 星期日開始
@@ -159,27 +190,91 @@ export function Calendar() {
     setShowBookingDetails(true)
   }
 
-  const previousMonth = () => {
-    setCurrentMonth(subMonths(currentMonth, 1))
+  const navigatePrevious = () => {
+    switch (viewType) {
+      case 'month':
+        setCurrentDate(subMonths(currentDate, 1))
+        break
+      case 'week':
+        setCurrentDate(subWeeks(currentDate, 1))
+        break
+      case 'day':
+        setCurrentDate(subDays(currentDate, 1))
+        break
+    }
   }
 
-  const nextMonth = () => {
-    setCurrentMonth(addMonths(currentMonth, 1))
+  const navigateNext = () => {
+    switch (viewType) {
+      case 'month':
+        setCurrentDate(addMonths(currentDate, 1))
+        break
+      case 'week':
+        setCurrentDate(addWeeks(currentDate, 1))
+        break
+      case 'day':
+        setCurrentDate(addDays(currentDate, 1))
+        break
+    }
+  }
+
+  const getViewTitle = () => {
+    switch (viewType) {
+      case 'month':
+        return format(currentDate, 'yyyy年 MMMM', { locale: zhTW })
+      case 'week':
+        const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 })
+        const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 })
+        return `${format(weekStart, 'MM月dd日', { locale: zhTW })} - ${format(weekEnd, 'MM月dd日', { locale: zhTW })}`
+      case 'day':
+        return format(currentDate, 'yyyy年MM月dd日 EEEE', { locale: zhTW })
+      default:
+        return ''
+    }
   }
 
   return (
     <div className="space-y-6">
-      {/* 月份導航 */}
+      {/* 視圖選擇和導航 */}
       <div className="flex items-center justify-between">
-        <Button variant="outline" onClick={previousMonth}>
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <h2 className="text-xl font-semibold">
-          {format(currentMonth, 'yyyy年 MMMM', { locale: zhTW })}
-        </h2>
-        <Button variant="outline" onClick={nextMonth}>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant={viewType === 'month' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={() => setViewType('month')}
+          >
+            <LayoutGrid className="h-4 w-4 mr-1" />
+            月
+          </Button>
+          <Button 
+            variant={viewType === 'week' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={() => setViewType('week')}
+          >
+            <Grid3x3 className="h-4 w-4 mr-1" />
+            週
+          </Button>
+          <Button 
+            variant={viewType === 'day' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={() => setViewType('day')}
+          >
+            <CalendarIcon className="h-4 w-4 mr-1" />
+            日
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <Button variant="outline" onClick={navigatePrevious}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <h2 className="text-xl font-semibold min-w-0">
+            {getViewTitle()}
+          </h2>
+          <Button variant="outline" onClick={navigateNext}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* 設備顏色圖例 */}
@@ -211,25 +306,25 @@ export function Calendar() {
       </div>
 
       {/* 日曆網格 */}
-      <div className="grid grid-cols-7 gap-1">
-        {/* 星期標頭 */}
-        {['日', '一', '二', '三', '四', '五', '六'].map((day) => (
+      <div className={`grid gap-1 ${viewType === 'day' ? 'grid-cols-1' : 'grid-cols-7'}`}>
+        {/* 星期標頭 - 只在月視圖和週視圖顯示 */}
+        {viewType !== 'day' && ['日', '一', '二', '三', '四', '五', '六'].map((day) => (
           <div key={day} className="p-2 text-center font-medium text-gray-500">
             {day}
           </div>
         ))}
 
         {/* 日期網格 */}
-        {daysInCalendar.map((date) => {
+        {daysInView.map((date) => {
           const dayBookings = getBookingsForDate(date)
           const isSelected = selectedDate && isSameDay(date, selectedDate)
-          const isCurrentMonth = isSameMonth(date, currentMonth)
+          const isCurrentMonth = viewType === 'month' ? isSameMonth(date, currentDate) : true
           const isNotAvailable = !isBookingAvailable(date)
 
           return (
             <div
               key={date.toString()}
-              className={`min-h-[100px] p-2 border cursor-pointer transition-colors ${
+              className={`${viewType === 'day' ? 'min-h-[400px]' : 'min-h-[100px]'} p-2 border cursor-pointer transition-colors ${
                 isSelected ? 'bg-blue-100 border-blue-300' : 'border-gray-200'
               } ${
                 isToday(date) ? 'bg-blue-50' : ''
@@ -240,16 +335,19 @@ export function Calendar() {
               }`}
               onClick={() => !isNotAvailable && handleDateClick(date)}
             >
-              <div className="font-medium text-sm">
-                {format(date, 'd')}
+              <div className={`font-medium ${viewType === 'day' ? 'text-lg mb-4' : 'text-sm'}`}>
+                {viewType === 'day' 
+                  ? format(date, 'MM月dd日 EEEE', { locale: zhTW })
+                  : format(date, 'd')
+                }
               </div>
               
               {/* 預約資訊 */}
-              <div className="mt-1 space-y-1">
-                {dayBookings.slice(0, 3).map((booking) => (
+              <div className={`mt-1 space-y-1 ${viewType === 'day' ? 'space-y-2' : ''}`}>
+                {dayBookings.slice(0, viewType === 'day' ? 10 : 3).map((booking) => (
                   <div
                     key={booking.id}
-                    className={`text-xs p-1 rounded border cursor-pointer hover:opacity-80 transition-opacity ${
+                    className={`${viewType === 'day' ? 'text-sm p-2' : 'text-xs p-1'} rounded border cursor-pointer hover:opacity-80 transition-opacity ${
                       booking.status === 'REJECTED' ? 'opacity-60' : ''
                     }`}
                     style={{
@@ -262,7 +360,7 @@ export function Calendar() {
                   >
                     <div className="flex items-center gap-1 truncate">
                       <div 
-                        className="w-2 h-2 rounded-full border"
+                        className={`${viewType === 'day' ? 'w-3 h-3' : 'w-2 h-2'} rounded-full border`}
                         style={{ 
                           backgroundColor: booking.equipment.color || '#9CA3AF',
                           borderColor: booking.equipment.color ? hexToRgba(booking.equipment.color, 0.5) : '#D1D5DB'
@@ -270,10 +368,10 @@ export function Calendar() {
                       ></div>
                       <span className="truncate font-medium">{booking.equipment.name}</span>
                     </div>
-                    <div className="flex items-center gap-1 text-xs opacity-75">
-                      <Clock className="h-2.5 w-2.5" />
-                      {format(booking.startTime, 'HH:mm')}
-                      <span className={`text-xs font-medium ${
+                    <div className={`flex items-center gap-1 ${viewType === 'day' ? 'text-sm' : 'text-xs'} opacity-75`}>
+                      <Clock className={`${viewType === 'day' ? 'h-3 w-3' : 'h-2.5 w-2.5'}`} />
+                      {format(booking.startTime, 'HH:mm')} - {format(booking.endTime, 'HH:mm')}
+                      <span className={`${viewType === 'day' ? 'text-sm' : 'text-xs'} font-medium ${
                         booking.status === 'PENDING' ? 'text-orange-600' :
                         booking.status === 'APPROVED' ? 'text-green-600' :
                         'text-red-600'
@@ -283,18 +381,23 @@ export function Calendar() {
                         {booking.status === 'REJECTED' && '已拒絕'}
                       </span>
                     </div>
+                    {viewType === 'day' && (
+                      <div className="text-xs text-gray-600 mt-1 truncate">
+                        {booking.user ? booking.user.name || booking.user.email : booking.guestName}
+                      </div>
+                    )}
                   </div>
                 ))}
-                {dayBookings.length > 3 && (
-                  <div className="text-xs text-gray-500 p-1">
-                    +{dayBookings.length - 3} 更多預約
+                {dayBookings.length > (viewType === 'day' ? 10 : 3) && (
+                  <div className={`${viewType === 'day' ? 'text-sm' : 'text-xs'} text-gray-500 p-1`}>
+                    +{dayBookings.length - (viewType === 'day' ? 10 : 3)} 更多預約
                   </div>
                 )}
               </div>
 
               {/* 不可預約日期標示 */}
               {isNotAvailable && (
-                <div className="text-xs text-red-500 mt-1">
+                <div className={`${viewType === 'day' ? 'text-sm' : 'text-xs'} text-red-500 mt-1`}>
                   不開放
                 </div>
               )}
