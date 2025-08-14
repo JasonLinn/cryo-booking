@@ -1,12 +1,7 @@
 {
-  "/_not-found": "app/_not-found.js",
+  "/not-found": "app/not-found.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/admin/dashboard/page": "app/admin/dashboard/page.js",
   "/api/equipment/route": "app/api/equipment/route.js",
-  "/api/init/route": "app/api/init/route.js",
-  "/api/bookings/[id]/route": "app/api/bookings/[id]/route.js",
   "/api/bookings/route": "app/api/bookings/route.js",
-  "/auth/signin/page": "app/auth/signin/page.js",
-  "/page": "app/page.js",
-  "/my-bookings/page": "app/my-bookings/page.js"
+  "/page": "app/page.js"
 }

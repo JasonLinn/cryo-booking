@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { isWeekend } from "date-fns"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -17,24 +18,17 @@ export function isPublicHoliday(date: Date): boolean {
   const month = date.getMonth() + 1 // getMonth() returns 0-11
   const day = date.getDate()
   
-  // 台灣國定假日 (2025年為例，實際使用時可以接 API 或更完整的假日資料)
+  // 台灣國定假日 (簡化版本，只包含確定的國定假日)
   const holidays = [
-    // 元旦
+    // 元旦 (1/1)
     { month: 1, day: 1 },
-    // 春節假期 (2025年1月29日-2月2日)
-    { month: 1, day: 29 }, { month: 1, day: 30 }, { month: 1, day: 31 },
-    { month: 2, day: 1 }, { month: 2, day: 2 },
-    // 和平紀念日
+    // 和平紀念日 (2/28)
     { month: 2, day: 28 },
-    // 兒童節/清明節 (2025年4月4日)
+    // 清明節 (4/4)
     { month: 4, day: 4 },
-    // 勞動節
+    // 勞動節 (5/1)
     { month: 5, day: 1 },
-    // 端午節 (2025年5月31日)
-    { month: 5, day: 31 },
-    // 中秋節 (2025年10月6日)
-    { month: 10, day: 6 },
-    // 國慶日
+    // 國慶日 (10/10)
     { month: 10, day: 10 },
   ]
   
@@ -43,9 +37,9 @@ export function isPublicHoliday(date: Date): boolean {
 
 // 檢查日期是否可以預約 (非週末且非國定假日)
 export function isBookingAvailable(date: Date): boolean {
-  const day = date.getDay()
-  const isWeekendDay = day === 0 || day === 6 // Sunday = 0, Saturday = 6
-  return !isWeekendDay && !isPublicHoliday(date)
+  const isWeekendDay = isWeekend(date) // 使用 date-fns 的 isWeekend 函式
+  const isHoliday = isPublicHoliday(date)
+  return !isWeekendDay && !isHoliday
 }
 
 // 檢查時間是否在允許的時段內

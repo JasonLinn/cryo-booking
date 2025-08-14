@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, isSameMonth, isWeekend } from 'date-fns'
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, isSameMonth, isWeekend, startOfWeek, endOfWeek } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight, Clock } from 'lucide-react'
 import { BookingDialog } from './booking-dialog'
@@ -96,7 +96,11 @@ export function Calendar() {
 
   const monthStart = startOfMonth(currentMonth)
   const monthEnd = endOfMonth(currentMonth)
-  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd })
+  
+  // 取得完整的日曆週期 (包含上個月末和下個月初的日期)
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 }) // 0 = 星期日開始
+  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 })
+  const daysInCalendar = eachDayOfInterval({ start: calendarStart, end: calendarEnd })
 
   const getBookingsForDate = (date: Date) => {
     return bookings.filter(booking => 
@@ -189,7 +193,7 @@ export function Calendar() {
         ))}
 
         {/* 日期網格 */}
-        {daysInMonth.map((date) => {
+        {daysInCalendar.map((date) => {
           const dayBookings = getBookingsForDate(date)
           const isSelected = selectedDate && isSameDay(date, selectedDate)
           const isCurrentMonth = isSameMonth(date, currentMonth)
