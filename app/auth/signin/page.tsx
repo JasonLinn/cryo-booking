@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 
 export default function SignInPage() {
   const [email, setEmail] = useState('')
-  const [name, setName] = useState('')
+  const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
@@ -21,14 +21,14 @@ export default function SignInPage() {
     try {
       const result = await signIn('credentials', {
         email,
-        name,
+        password,
         redirect: false,
       })
 
       if (result?.ok) {
         router.push('/')
       } else {
-        alert('登入失敗，請重試')
+        alert('登入失敗，請檢查帳號密碼')
       }
     } catch (error) {
       console.error('登入錯誤:', error)
@@ -69,14 +69,14 @@ export default function SignInPage() {
             </div>
             
             <div>
-              <Label htmlFor="name">姓名</Label>
+              <Label htmlFor="password">密碼</Label>
               <Input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
-                placeholder="請輸入您的姓名"
+                placeholder="請輸入密碼"
               />
             </div>
 
@@ -88,6 +88,15 @@ export default function SignInPage() {
               {isLoading ? '登入中...' : '登入'}
             </Button>
           </form>
+
+          {/* 預設帳號說明 */}
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
+            <div className="font-semibold mb-2">預設測試帳號：</div>
+            <div className="space-y-1">
+              <div><strong>管理員：</strong> admin@example.com / admin123</div>
+              <div><strong>一般使用者：</strong> user@example.com / user123</div>
+            </div>
+          </div>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">

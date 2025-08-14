@@ -8,6 +8,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday
 import { zhTW } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight, Clock } from 'lucide-react'
 import { BookingDialog } from './booking-dialog'
+import { isPublicHoliday, isBookingAvailable } from '@/lib/utils'
 
 interface Equipment {
   id: string
@@ -21,11 +22,34 @@ interface Booking {
   startTime: Date
   endTime: Date
   equipment: Equipment
-  user: {
-    name: string
+  user?: {
+    name?: string
     email: string
   }
+  guestName?: string
+  purpose: string
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
+}
+
+// 設備顏色映射
+const EQUIPMENT_COLORS = {
+  'cryo-1': 'bg-blue-500',
+  'cryo-2': 'bg-green-500', 
+  'cryo-3': 'bg-purple-500',
+  'cryo-4': 'bg-orange-500',
+} as const
+
+const EQUIPMENT_LIGHT_COLORS = {
+  'cryo-1': 'bg-blue-100 text-blue-800 border-blue-200',
+  'cryo-2': 'bg-green-100 text-green-800 border-green-200',
+  'cryo-3': 'bg-purple-100 text-purple-800 border-purple-200', 
+  'cryo-4': 'bg-orange-100 text-orange-800 border-orange-200',
+} as const
+
+// 取得設備顏色
+function getEquipmentColor(equipmentId: string, isLight: boolean = false) {
+  const colors = isLight ? EQUIPMENT_LIGHT_COLORS : EQUIPMENT_COLORS
+  return colors[equipmentId as keyof typeof colors] || (isLight ? 'bg-gray-100 text-gray-800 border-gray-200' : 'bg-gray-500')
 }
 
 export function Calendar() {
@@ -82,7 +106,6 @@ export function Calendar() {
   }
 
   const handleDateClick = (date: Date) => {
-    if (isWeekend(date)) return // 週末不可選擇
     setSelectedDate(date)
   }
 
@@ -112,6 +135,28 @@ export function Calendar() {
         <Button variant="outline" onClick={nextMonth}>
           <ChevronRight className="h-4 w-4" />
         </Button>
+      </div>
+
+      {/* 設備顏色圖例 */}
+      <div className="flex flex-wrap gap-4 p-4 bg-gray-50 rounded-lg">
+        <div className="text-sm font-medium text-gray-700">設備圖例：</div>
+        {equipment.map((eq) => (
+          <div key={eq.id} className="flex items-center gap-2">
+            <div className={`w-3 h-3 rounded-full ${getEquipmentColor(eq.id)}`}></div>
+            <span className="text-sm text-gray-700">{eq.name}</span>
+          </div>
+        ))}
+        <div className="ml-4 flex items-center gap-4 text-xs text-gray-600">
+          <div className="flex items-center gap-1">
+            <span className="text-green-600">●</span> 已核准
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-orange-600">●</span> 待審核
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-red-600">●</span> 已拒絕
+          </div>
+        </div>
       </div>
 
       {/* 設備列表 */}
@@ -148,7 +193,7 @@ export function Calendar() {
           const dayBookings = getBookingsForDate(date)
           const isSelected = selectedDate && isSameDay(date, selectedDate)
           const isCurrentMonth = isSameMonth(date, currentMonth)
-          const isWeekendDay = isWeekend(date)
+          const isNotAvailable = !isBookingAvailable(date)
 
           return (
             <div
@@ -160,9 +205,9 @@ export function Calendar() {
               } ${
                 !isCurrentMonth ? 'text-gray-400 bg-gray-50' : ''
               } ${
-                isWeekendDay ? 'bg-red-50 cursor-not-allowed' : 'hover:bg-gray-50'
+                isNotAvailable ? 'bg-red-50 cursor-not-allowed' : 'hover:bg-gray-50'
               }`}
-              onClick={() => !isWeekendDay && handleDateClick(date)}
+              onClick={() => !isNotAvailable && handleDateClick(date)}
             >
               <div className="font-medium text-sm">
                 {format(date, 'd')}
@@ -171,27 +216,33 @@ export function Calendar() {
               {/* 預約資訊 */}
               <div className="mt-1 space-y-1">
                 {dayBookings.slice(0, 3).map((booking) => (
-                  <Badge
+                  <div
                     key={booking.id}
-                    variant={
-                      booking.status === 'APPROVED' ? 'default' :
-                      booking.status === 'PENDING' ? 'secondary' : 'destructive'
-                    }
-                    className="text-xs block truncate"
+                    className={`text-xs p-1 rounded border ${getEquipmentColor(booking.equipment.id, true)} cursor-pointer hover:opacity-80`}
+                    title={`${booking.equipment.name} - ${format(booking.startTime, 'HH:mm')} (${booking.status === 'APPROVED' ? '已核准' : booking.status === 'PENDING' ? '待審核' : '已拒絕'})`}
                   >
-                    <Clock className="h-3 w-3 mr-1" />
-                    {format(booking.startTime, 'HH:mm')}
-                  </Badge>
+                    <div className="flex items-center gap-1 truncate">
+                      <div className={`w-2 h-2 rounded-full ${getEquipmentColor(booking.equipment.id)}`}></div>
+                      <span className="truncate font-medium">{booking.equipment.name}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs opacity-75">
+                      <Clock className="h-2.5 w-2.5" />
+                      {format(booking.startTime, 'HH:mm')}
+                      {booking.status === 'PENDING' && <span className="text-orange-600">●</span>}
+                      {booking.status === 'APPROVED' && <span className="text-green-600">●</span>}
+                      {booking.status === 'REJECTED' && <span className="text-red-600">●</span>}
+                    </div>
+                  </div>
                 ))}
                 {dayBookings.length > 3 && (
-                  <div className="text-xs text-gray-500">
-                    +{dayBookings.length - 3} 更多
+                  <div className="text-xs text-gray-500 p-1">
+                    +{dayBookings.length - 3} 更多預約
                   </div>
                 )}
               </div>
 
-              {/* 週末標示 */}
-              {isWeekendDay && (
+              {/* 不可預約日期標示 */}
+              {isNotAvailable && (
                 <div className="text-xs text-red-500 mt-1">
                   不開放
                 </div>

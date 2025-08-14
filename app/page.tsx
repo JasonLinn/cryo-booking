@@ -55,6 +55,9 @@ export default async function HomePage() {
                   <p className="text-sm text-gray-600">
                     週一至週五 09:00-18:00
                   </p>
+                  <p className="text-xs text-red-600 mt-1">
+                    週末（六、日）不開放預約
+                  </p>
                 </div>
                 
                 <div>
@@ -62,7 +65,7 @@ export default async function HomePage() {
                   <ul className="text-sm text-gray-600 space-y-1">
                     <li>• 需要管理員審核</li>
                     <li>• 最多提前 30 天預約</li>
-                    <li>• 假日不開放預約</li>
+                    <li>• 週末（六、日）不開放預約</li>
                   </ul>
                 </div>
               </CardContent>

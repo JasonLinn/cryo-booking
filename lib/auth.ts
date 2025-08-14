@@ -2,7 +2,7 @@ import { NextAuthOptions } from 'next-auth'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import GoogleProvider from 'next-auth/providers/google'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { prisma } from './prisma'
+import { prisma } from './db'
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -15,50 +15,72 @@ export const authOptions: NextAuthOptions = {
       name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
-        name: { label: 'Name', type: 'text' },
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email) return null
+        if (!credentials?.email || !credentials?.password) return null
 
-        // 在實際專案中，這裡應該要有密碼驗證
-        // 目前為了展示方便，只要有 email 就建立或找到使用者
-        let user = await prisma.user.findUnique({
-          where: { email: credentials.email }
-        })
-
-        if (!user) {
-          user = await prisma.user.create({
-            data: {
-              email: credentials.email,
-              name: credentials.name || '',
-              role: 'USER'
-            }
+        // 預設管理員帳號
+        if (credentials.email === 'admin@example.com' && credentials.password === 'admin123') {
+          let user = await prisma.user.findUnique({
+            where: { email: credentials.email }
           })
+
+          if (!user) {
+            user = await prisma.user.create({
+              data: {
+                email: credentials.email,
+                name: '系統管理員',
+                role: 'ADMIN'
+              }
+            })
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          }
         }
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
+        // 測試使用者帳號
+        if (credentials.email === 'user@example.com' && credentials.password === 'user123') {
+          let user = await prisma.user.findUnique({
+            where: { email: credentials.email }
+          })
+
+          if (!user) {
+            user = await prisma.user.create({
+              data: {
+                email: credentials.email,
+                name: '測試使用者',
+                role: 'USER'
+              }
+            })
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          }
         }
+
+        // 無效的憑證
+        return null
       }
     })
   ],
-  session: {
-    strategy: 'jwt',
+  pages: {
+    signIn: '/auth/signin',
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: user.email! }
-        })
-        
-        if (dbUser) {
-          token.role = dbUser.role
-          token.id = dbUser.id
-        }
+        token.role = (user as any).role
+        token.id = user.id
       }
       return token
     },
@@ -70,7 +92,7 @@ export const authOptions: NextAuthOptions = {
       return session
     },
   },
-  pages: {
-    signIn: '/auth/signin',
+  session: {
+    strategy: 'jwt',
   },
 }

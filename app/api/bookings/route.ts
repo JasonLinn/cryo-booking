@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { sendEmail, generateBookingApprovalEmail, generateBookingRejectionEmail } from '@/lib/email'
+import { isBookingAvailable } from '@/lib/utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -39,8 +40,7 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             name: true,
-            email: true,
-            department: true
+            email: true
           }
         },
         equipment: {
@@ -84,6 +84,14 @@ export async function POST(request: NextRequest) {
     if (start < new Date()) {
       return NextResponse.json(
         { error: '不能預約過去的時間' },
+        { status: 400 }
+      )
+    }
+
+    // 檢查是否為可預約日期（非週末且非國定假日）
+    if (!isBookingAvailable(start)) {
+      return NextResponse.json(
+        { error: '週末和國定假日不開放預約' },
         { status: 400 }
       )
     }

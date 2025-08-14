@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { sendEmail, generateBookingApprovalEmail, generateBookingRejectionEmail } from '@/lib/email'
@@ -43,26 +43,31 @@ export async function PATCH(
 
     // 發送郵件通知
     try {
-      const emailTemplate = status === 'APPROVED' 
-        ? generateBookingApprovalEmail(
-            booking.user.name || booking.user.email,
-            booking.equipment.name,
-            booking.startTime,
-            booking.endTime
-          )
-        : generateBookingRejectionEmail(
-            booking.user.name || booking.user.email,
-            booking.equipment.name,
-            booking.startTime,
-            booking.endTime,
-            adminNotes
-          )
+      const recipientName = booking.user?.name || booking.guestName || 'User'
+      const recipientEmail = booking.user?.email || booking.guestEmail
+      
+      if (recipientEmail) {
+        const emailTemplate = status === 'APPROVED' 
+          ? generateBookingApprovalEmail(
+              recipientName,
+              booking.equipment.name,
+              booking.startTime,
+              booking.endTime
+            )
+          : generateBookingRejectionEmail(
+              recipientName,
+              booking.equipment.name,
+              booking.startTime,
+              booking.endTime,
+              adminNotes
+            )
 
-      await sendEmail({
-        to: booking.user.email,
-        subject: status === 'APPROVED' ? '預約已核准' : '預約已拒絕',
-        html: emailTemplate
-      })
+        await sendEmail({
+          to: recipientEmail,
+          subject: status === 'APPROVED' ? '預約已核准' : '預約已拒絕',
+          html: emailTemplate
+        })
+      }
     } catch (emailError) {
       console.error('郵件發送失敗:', emailError)
       // 即使郵件發送失敗，也不影響預約狀態更新

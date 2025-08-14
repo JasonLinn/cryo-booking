@@ -6,20 +6,21 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("POSTGRES_PRISMA_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
-enum UserRole {
-  USER
-  ADMIN
-}
+model User {
+  id       String @id @default(cuid())
+  email    String @unique
+  name     String?
+  role     String @default("USER") // USER, ADMIN
+  image    String?
+  bookings Booking[]
+  accounts Account[]
+  sessions Session[]
 
-enum BookingStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  CANCELLED
+  @@map("users")
 }
 
 model Account {
@@ -28,17 +29,18 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@map("accounts")
 }
 
 model Session {
@@ -47,25 +49,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
 
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  role          UserRole  @default(USER)
-  department    String?
-  phone         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  accounts Account[]
-  sessions Session[]
-  bookings Booking[]
-
-  @@map("users")
+  @@map("sessions")
 }
 
 model VerificationToken {
@@ -74,52 +59,50 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+  @@map("verificationtokens")
 }
 
 model Equipment {
-  id          String  @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
   description String?
   location    String?
-  isActive    Boolean @default(true)
-  image       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  bookings  Booking[]
-  timeSlots TimeSlot[]
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  bookings    Booking[]
 
   @@map("equipment")
 }
 
 model TimeSlot {
-  id          String  @id @default(cuid())
-  equipmentId String
-  dayOfWeek   Int     // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  startHour   Int     // 0-23
-  endHour     Int     // 0-23
-  isActive    Boolean @default(true)
+  id        String    @id @default(cuid())
+  startTime String    // Format: "HH:MM"
+  endTime   String    // Format: "HH:MM"
+  bookings  Booking[]
 
-  equipment Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
-
+  @@unique([startTime, endTime])
   @@map("time_slots")
 }
 
 model Booking {
-  id          String        @id @default(cuid())
-  userId      String
+  id          String   @id @default(cuid())
+  userId      String?
   equipmentId String
+  timeSlotId  String?
   startTime   DateTime
   endTime     DateTime
   purpose     String
-  status      BookingStatus @default(PENDING)
-  notes       String?
-  adminNotes  String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED, CANCELLED
+  adminNotes  String?  // Admin can add notes when approving/rejecting
+  guestName   String?  // For non-authenticated users
+  guestEmail  String?  // For non-authenticated users
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  equipment Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  user      User?      @relation(fields: [userId], references: [id])
+  equipment Equipment  @relation(fields: [equipmentId], references: [id])
+  timeSlot  TimeSlot?  @relation(fields: [timeSlotId], references: [id])
 
   @@map("bookings")
 }
