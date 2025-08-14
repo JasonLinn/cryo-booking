@@ -1,1 +1,13 @@
-{}
+{
+  "/not-found": "app/not-found.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/demo/page": "app/demo/page.js",
+  "/page": "app/page.js",
+  "/api/bookings/route": "app/api/bookings/route.js",
+  "/api/equipment/route": "app/api/equipment/route.js",
+  "/admin/dashboard/page": "app/admin/dashboard/page.js",
+  "/api/bookings/[id]/route": "app/api/bookings/[id]/route.js",
+  "/my-bookings/page": "app/my-bookings/page.js",
+  "/admin/equipment-colors/page": "app/admin/equipment-colors/page.js",
+  "/api/equipment/[id]/route": "app/api/equipment/[id]/route.js"
+}

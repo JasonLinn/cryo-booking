@@ -16,6 +16,7 @@ interface Equipment {
   name: string
   description?: string
   location?: string
+  color?: string // 新增顏色欄位
 }
 
 interface User {
@@ -37,25 +38,46 @@ interface Booking {
   createdAt?: Date
 }
 
-// 設備顏色映射
-const EQUIPMENT_COLORS = {
-  'cryo-1': 'bg-blue-500',
-  'cryo-2': 'bg-green-500', 
-  'cryo-3': 'bg-purple-500',
-  'cryo-4': 'bg-orange-500',
-} as const
+// 取得設備顏色 - 使用資料庫顏色或預設顏色
+function getEquipmentColor(equipment: Equipment | { id: string; color?: string }, isLight: boolean = false) {
+  const color = 'color' in equipment ? equipment.color : undefined
+  
+  if (color) {
+    if (isLight) {
+      // 將 hex 顏色轉為淺色背景
+      return `bg-opacity-10 border-opacity-30 text-opacity-80`
+    }
+    return '' // 將直接在 style 中使用 backgroundColor
+  }
+  
+  // 預設顏色映射
+  const EQUIPMENT_COLORS = {
+    'cryo-1': 'bg-blue-500',
+    'cryo-2': 'bg-green-500', 
+    'cryo-3': 'bg-purple-500',
+    'cryo-4': 'bg-orange-500',
+  } as const
 
-const EQUIPMENT_LIGHT_COLORS = {
-  'cryo-1': 'bg-blue-100 text-blue-800 border-blue-200',
-  'cryo-2': 'bg-green-100 text-green-800 border-green-200',
-  'cryo-3': 'bg-purple-100 text-purple-800 border-purple-200', 
-  'cryo-4': 'bg-orange-100 text-orange-800 border-orange-200',
-} as const
+  const EQUIPMENT_LIGHT_COLORS = {
+    'cryo-1': 'bg-blue-100 text-blue-800 border-blue-200',
+    'cryo-2': 'bg-green-100 text-green-800 border-green-200',
+    'cryo-3': 'bg-purple-100 text-purple-800 border-purple-200', 
+    'cryo-4': 'bg-orange-100 text-orange-800 border-orange-200',
+  } as const
 
-// 取得設備顏色
-function getEquipmentColor(equipmentId: string, isLight: boolean = false) {
   const colors = isLight ? EQUIPMENT_LIGHT_COLORS : EQUIPMENT_COLORS
-  return colors[equipmentId as keyof typeof colors] || (isLight ? 'bg-gray-100 text-gray-800 border-gray-200' : 'bg-gray-500')
+  return colors[equipment.id as keyof typeof colors] || (isLight ? 'bg-gray-100 text-gray-800 border-gray-200' : 'bg-gray-500')
+}
+
+// 將 hex 顏色轉為 rgba 格式
+function hexToRgba(hex: string, alpha: number = 1): string {
+  if (!hex) return 'rgba(156, 163, 175, 1)' // 預設灰色
+  
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16) 
+  const b = parseInt(hex.slice(5, 7), 16)
+  
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
 
 export function Calendar() {
@@ -161,7 +183,13 @@ export function Calendar() {
         <div className="text-sm font-medium text-gray-700">設備圖例：</div>
         {equipment.map((eq) => (
           <div key={eq.id} className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${getEquipmentColor(eq.id)}`}></div>
+            <div 
+              className="w-3 h-3 rounded-full border"
+              style={{ 
+                backgroundColor: eq.color || '#9CA3AF',
+                borderColor: eq.color ? hexToRgba(eq.color, 0.3) : '#D1D5DB'
+              }}
+            ></div>
             <span className="text-sm text-gray-700">{eq.name}</span>
           </div>
         ))}
@@ -183,13 +211,25 @@ export function Calendar() {
         {equipment.map((eq) => (
           <Card 
             key={eq.id} 
-            className={`cursor-pointer transition-colors hover:bg-gray-50 ${
+            className={`cursor-pointer transition-colors hover:bg-gray-50 border-2 ${
               selectedEquipment?.id === eq.id ? 'ring-2 ring-blue-500' : ''
             }`}
+            style={{
+              borderColor: eq.color ? hexToRgba(eq.color, 0.3) : '#D1D5DB'
+            }}
             onClick={() => handleEquipmentSelect(eq)}
           >
             <CardContent className="p-4">
-              <h3 className="font-medium">{eq.name}</h3>
+              <div className="flex items-center gap-3 mb-2">
+                <div 
+                  className="w-4 h-4 rounded-full border-2"
+                  style={{ 
+                    backgroundColor: eq.color || '#9CA3AF',
+                    borderColor: eq.color ? hexToRgba(eq.color, 0.5) : '#D1D5DB'
+                  }}
+                ></div>
+                <h3 className="font-medium">{eq.name}</h3>
+              </div>
               {eq.location && (
                 <p className="text-sm text-gray-600">{eq.location}</p>
               )}
@@ -237,14 +277,25 @@ export function Calendar() {
                 {dayBookings.slice(0, 3).map((booking) => (
                   <div
                     key={booking.id}
-                    className={`text-xs p-1 rounded border cursor-pointer hover:opacity-80 transition-opacity ${getEquipmentColor(booking.equipment.id, true)} ${
+                    className={`text-xs p-1 rounded border cursor-pointer hover:opacity-80 transition-opacity ${
                       booking.status === 'REJECTED' ? 'opacity-60' : ''
                     }`}
+                    style={{
+                      backgroundColor: booking.equipment.color ? hexToRgba(booking.equipment.color, 0.1) : 'rgba(243, 244, 246, 1)',
+                      borderColor: booking.equipment.color ? hexToRgba(booking.equipment.color, 0.3) : 'rgba(209, 213, 219, 1)',
+                      color: booking.equipment.color || '#374151'
+                    }}
                     title={`${booking.equipment.name} - ${format(booking.startTime, 'HH:mm')} (${booking.status === 'APPROVED' ? '已核准' : booking.status === 'PENDING' ? '待審核' : '已拒絕'})`}
                     onClick={(e) => handleBookingClick(booking, e)}
                   >
                     <div className="flex items-center gap-1 truncate">
-                      <div className={`w-2 h-2 rounded-full ${getEquipmentColor(booking.equipment.id)}`}></div>
+                      <div 
+                        className="w-2 h-2 rounded-full border"
+                        style={{ 
+                          backgroundColor: booking.equipment.color || '#9CA3AF',
+                          borderColor: booking.equipment.color ? hexToRgba(booking.equipment.color, 0.5) : '#D1D5DB'
+                        }}
+                      ></div>
                       <span className="truncate font-medium">{booking.equipment.name}</span>
                     </div>
                     <div className="flex items-center gap-1 text-xs opacity-75">

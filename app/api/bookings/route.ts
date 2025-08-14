@@ -61,7 +61,8 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             name: true,
-            location: true
+            location: true,
+            color: true // 包含顏色資訊
           }
         }
       },

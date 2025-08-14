@@ -100,6 +100,12 @@ export function Navbar() {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
+                        <Link href="/admin/equipment-colors" className="flex items-center">
+                          <Settings className="mr-2 h-4 w-4" />
+                          設備顏色管理
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link href="/admin/equipment" className="flex items-center">
                           <Settings className="mr-2 h-4 w-4" />
                           設備管理
