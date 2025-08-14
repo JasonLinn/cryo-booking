@@ -1,6 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { Navbar } from '@/components/navbar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -239,14 +242,23 @@ function EditEquipmentDialog({ equipment, open, onOpenChange, onSave }: EditEqui
 }
 
 export default function EquipmentManagement() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [equipment, setEquipment] = useState<Equipment[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null)
   const [showEditDialog, setShowEditDialog] = useState(false)
 
   useEffect(() => {
+    if (status === 'loading') return
+    
+    if (!session || session.user.role !== 'ADMIN') {
+      router.push('/')
+      return
+    }
+
     fetchEquipment()
-  }, [])
+  }, [session, status, router])
 
   const fetchEquipment = async () => {
     try {
@@ -330,34 +342,49 @@ export default function EquipmentManagement() {
     }
   }
 
-  if (loading) {
+  if (status === 'loading' || loading) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <Settings className="h-8 w-8 animate-spin mx-auto mb-2" />
-            <p>載入中...</p>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <Settings className="h-8 w-8 animate-spin mx-auto mb-2" />
+              <p>載入中...</p>
+            </div>
           </div>
         </div>
       </div>
     )
   }
 
-  return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Settings className="h-6 w-6" />
-          <h1 className="text-2xl font-bold">設備管理</h1>
-        </div>
-        <Button onClick={handleAdd}>
-          <Plus className="h-4 w-4 mr-2" />
-          新增設備
-        </Button>
-      </div>
+  if (!session || session.user.role !== 'ADMIN') {
+    return null
+  }
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {equipment.map((eq) => (
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      
+      <main className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Settings className="h-8 w-8" />
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">設備管理</h1>
+                <p className="text-gray-600 mt-1">管理系統中的所有設備</p>
+              </div>
+            </div>
+            <Button onClick={handleAdd}>
+              <Plus className="h-4 w-4 mr-2" />
+              新增設備
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {equipment.map((eq) => (
           <Card key={eq.id} className="relative">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
@@ -449,26 +476,27 @@ export default function EquipmentManagement() {
             </CardContent>
           </Card>
         ))}
-      </div>
-
-      {equipment.length === 0 && (
-        <div className="text-center py-12">
-          <Settings className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">沒有設備</h3>
-          <p className="text-gray-500 mb-4">開始建立您的第一個設備</p>
-          <Button onClick={handleAdd}>
-            <Plus className="h-4 w-4 mr-2" />
-            新增設備
-          </Button>
         </div>
-      )}
 
-      <EditEquipmentDialog
-        equipment={selectedEquipment}
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
-        onSave={fetchEquipment}
-      />
+        {equipment.length === 0 && (
+          <div className="text-center py-12">
+            <Settings className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">沒有設備</h3>
+            <p className="text-gray-500 mb-4">開始建立您的第一個設備</p>
+            <Button onClick={handleAdd}>
+              <Plus className="h-4 w-4 mr-2" />
+              新增設備
+            </Button>
+          </div>
+        )}
+
+        <EditEquipmentDialog
+          equipment={selectedEquipment}
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          onSave={fetchEquipment}
+        />
+      </main>
     </div>
   )
 }
