@@ -72,6 +72,7 @@ model Equipment {
   name        String
   description String?
   location    String?
+  color       String? // 設備顏色
   isActive    Boolean @default(true)
   
   bookings Booking[]
