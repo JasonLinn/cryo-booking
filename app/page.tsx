@@ -26,18 +26,18 @@ export default async function HomePage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
           {/* 日曆區域 */}
           <div className="lg:col-span-2">
             <Card>
-              <CardHeader>
-                <CardTitle>預約日曆</CardTitle>
-                <CardDescription>
+              <CardHeader className="pb-4 lg:pb-6">
+                <CardTitle className="text-lg lg:text-xl">預約日曆</CardTitle>
+                <CardDescription className="text-sm lg:text-base">
                   點擊日期選擇設備進行預約
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Suspense fallback={<div>載入中...</div>}>
+              <CardContent className="p-4 lg:p-6">
+                <Suspense fallback={<div className="text-center py-8 lg:py-12">載入中...</div>}>
                   <Calendar />
                 </Suspense>
               </CardContent>
@@ -45,14 +45,14 @@ export default async function HomePage() {
           </div>
 
           {/* 側邊欄 */}
-          <div className="space-y-6">
+          <div className="space-y-4 lg:space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle>快速資訊</CardTitle>
+              <CardHeader className="pb-4 lg:pb-6">
+                <CardTitle className="text-lg lg:text-xl">快速資訊</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 lg:space-y-4 p-4 lg:p-6">
                 <div>
-                  <h4 className="font-medium text-gray-900">開放時間</h4>
+                  <h4 className="font-medium text-gray-900 text-sm lg:text-base">開放時間</h4>
                   <p className="text-sm text-gray-600">
                     週一至週五 09:00-18:00
                   </p>
@@ -62,7 +62,7 @@ export default async function HomePage() {
                 </div>
                 
                 <div>
-                  <h4 className="font-medium text-gray-900">預約規則</h4>
+                  <h4 className="font-medium text-gray-900 text-sm lg:text-base">預約規則</h4>
                   <ul className="text-sm text-gray-600 space-y-1">
                     <li>• 需要管理員審核</li>
                     <li>• 最多提前 30 天預約</li>
@@ -73,11 +73,11 @@ export default async function HomePage() {
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>設備狀態</CardTitle>
+              <CardHeader className="pb-4 lg:pb-6">
+                <CardTitle className="text-lg lg:text-xl">設備狀態</CardTitle>
               </CardHeader>
-              <CardContent>
-                <Suspense fallback={<div>載入中...</div>}>
+              <CardContent className="p-4 lg:p-6">
+                <Suspense fallback={<div className="text-center py-4">載入中...</div>}>
                   <EquipmentStatus />
                 </Suspense>
               </CardContent>
@@ -92,27 +92,27 @@ export default async function HomePage() {
 async function EquipmentStatus() {
   // 這裡可以加入設備狀態的資料
   return (
-    <div className="space-y-3">
+    <div className="space-y-2 lg:space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm">低溫恆溫器 A</span>
+        <span className="text-xs lg:text-sm">低溫恆溫器 A</span>
         <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
           可用
         </span>
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-sm">低溫恆溫器 B</span>
+        <span className="text-xs lg:text-sm">低溫恆溫器 B</span>
         <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
           可用
         </span>
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-sm">稀釋致冷機</span>
+        <span className="text-xs lg:text-sm">稀釋致冷機</span>
         <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
           使用中
         </span>
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-sm">氦氣回收系統</span>
+        <span className="text-xs lg:text-sm">氦氣回收系統</span>
         <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
           可用
         </span>

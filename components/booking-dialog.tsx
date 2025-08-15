@@ -123,17 +123,17 @@ export function BookingDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto mx-4 sm:mx-0">
         <DialogHeader>
-          <DialogTitle>預約設備</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-lg lg:text-xl">預約設備</DialogTitle>
+          <DialogDescription className="text-sm lg:text-base">
             預約 {equipment.name} - {format(selectedDate, 'yyyy年MM月dd日', { locale: zhTW })}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-3 lg:space-y-4">
+          <div className="grid grid-cols-2 gap-3 lg:gap-4">
             <div>
-              <Label htmlFor="startTime">開始時間</Label>
+              <Label htmlFor="startTime" className="text-sm lg:text-base">開始時間</Label>
               <Input
                 id="startTime"
                 type="time"
@@ -142,10 +142,11 @@ export function BookingDialog({
                 min="09:00"
                 max="18:00"
                 required
+                className="text-sm lg:text-base"
               />
             </div>
             <div>
-              <Label htmlFor="endTime">結束時間</Label>
+              <Label htmlFor="endTime" className="text-sm lg:text-base">結束時間</Label>
               <Input
                 id="endTime"
                 type="time"
@@ -154,11 +155,12 @@ export function BookingDialog({
                 min="09:00"
                 max="18:00"
                 required
+                className="text-sm lg:text-base"
               />
             </div>
           </div>
           <div>
-            <Label htmlFor="purpose">單位/所屬PI</Label>
+            <Label htmlFor="purpose" className="text-sm lg:text-base">單位/所屬PI</Label>
             <Textarea
               id="purpose"
               placeholder="請說明使用設備的目的和實驗內容..."
@@ -166,12 +168,13 @@ export function BookingDialog({
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPurpose(e.target.value)}
               required
               rows={3}
+              className="text-sm lg:text-base resize-none"
             />
           </div>
           {!session && (
             <>
               <div>
-                <Label htmlFor="guestName">姓名</Label>
+                <Label htmlFor="guestName" className="text-sm lg:text-base">姓名</Label>
                 <Input
                   id="guestName"
                   type="text"
@@ -179,10 +182,11 @@ export function BookingDialog({
                   value={guestName}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGuestName(e.target.value)}
                   required
+                  className="text-sm lg:text-base"
                 />
               </div>
               <div>
-                <Label htmlFor="guestEmail">聯絡信箱</Label>
+                <Label htmlFor="guestEmail" className="text-sm lg:text-base">聯絡信箱</Label>
                 <Input
                   id="guestEmail"
                   type="email"
@@ -190,19 +194,21 @@ export function BookingDialog({
                   value={guestEmail}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGuestEmail(e.target.value)}
                   required
+                  className="text-sm lg:text-base"
                 />
               </div>
             </>
           )}
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
+              className="flex-1 sm:flex-initial"
             >
               取消
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading} className="flex-1 sm:flex-initial">
               {isLoading ? '提交中...' : '提交預約'}
             </Button>
           </DialogFooter>

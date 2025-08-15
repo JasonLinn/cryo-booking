@@ -234,65 +234,76 @@ export function Calendar() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       {/* 視圖選擇和導航 */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        {/* 視圖切換按鈕 */}
+        <div className="flex items-center gap-1 lg:gap-2">
           <Button 
             variant={viewType === 'month' ? 'default' : 'outline'} 
             size="sm"
+            className="flex-1 lg:flex-initial text-xs lg:text-sm px-2 lg:px-4"
             onClick={() => setViewType('month')}
           >
-            <LayoutGrid className="h-4 w-4 mr-1" />
+            <LayoutGrid className="h-3 w-3 lg:h-4 lg:w-4 mr-1" />
             月
           </Button>
           <Button 
             variant={viewType === 'week' ? 'default' : 'outline'} 
             size="sm"
+            className="flex-1 lg:flex-initial text-xs lg:text-sm px-2 lg:px-4"
             onClick={() => setViewType('week')}
           >
-            <Grid3x3 className="h-4 w-4 mr-1" />
+            <Grid3x3 className="h-3 w-3 lg:h-4 lg:w-4 mr-1" />
             週
           </Button>
           <Button 
             variant={viewType === 'day' ? 'default' : 'outline'} 
             size="sm"
+            className="flex-1 lg:flex-initial text-xs lg:text-sm px-2 lg:px-4"
             onClick={() => setViewType('day')}
           >
-            <CalendarIcon className="h-4 w-4 mr-1" />
+            <CalendarIcon className="h-3 w-3 lg:h-4 lg:w-4 mr-1" />
             日
           </Button>
         </div>
 
-        <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={navigatePrevious}>
+        {/* 日期導航 */}
+        <div className="flex items-center justify-center gap-2 lg:gap-4">
+          <Button variant="outline" size="sm" onClick={navigatePrevious}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <h2 className="text-xl font-semibold min-w-0">
+          <h2 className="text-lg lg:text-xl font-semibold min-w-0 text-center px-2">
             {getViewTitle()}
           </h2>
-          <Button variant="outline" onClick={navigateNext}>
+          <Button variant="outline" size="sm" onClick={navigateNext}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
       {/* 設備顏色圖例 */}
-      <div className="flex flex-wrap gap-4 p-4 bg-gray-50 rounded-lg">
-        <div className="text-sm font-medium text-gray-700">設備圖例：</div>
-        {equipment.map((eq) => (
-          <div key={eq.id} className="flex items-center gap-2">
-            <div 
-              className="w-3 h-3 rounded-full border"
-              style={{ 
-                backgroundColor: eq.color || '#9CA3AF',
-                borderColor: eq.color ? hexToRgba(eq.color, 0.3) : '#D1D5DB'
-              }}
-            ></div>
-            <span className="text-sm text-gray-700">{eq.name}</span>
-          </div>
-        ))}
-        <div className="ml-4 flex items-center gap-4 text-xs text-gray-600">
+      <div className="p-3 lg:p-4 bg-gray-50 rounded-lg">
+        <div className="text-xs lg:text-sm font-medium text-gray-700 mb-2 lg:mb-0 lg:inline">設備圖例：</div>
+        
+        {/* 設備圖例 */}
+        <div className="flex flex-wrap gap-2 lg:gap-4 mb-2 lg:mb-0 lg:inline-flex lg:ml-2">
+          {equipment.map((eq) => (
+            <div key={eq.id} className="flex items-center gap-1 lg:gap-2">
+              <div 
+                className="w-2.5 h-2.5 lg:w-3 lg:h-3 rounded-full border"
+                style={{ 
+                  backgroundColor: eq.color || '#9CA3AF',
+                  borderColor: eq.color ? hexToRgba(eq.color, 0.3) : '#D1D5DB'
+                }}
+              ></div>
+              <span className="text-xs lg:text-sm text-gray-700">{eq.name}</span>
+            </div>
+          ))}
+        </div>
+        
+        {/* 狀態圖例 */}
+        <div className="flex flex-wrap items-center gap-2 lg:gap-4 text-xs text-gray-600 lg:ml-4 lg:inline-flex">
           <div className="flex items-center gap-1">
             <span className="text-green-600">●</span> 已核准
           </div>
@@ -306,10 +317,10 @@ export function Calendar() {
       </div>
 
       {/* 日曆網格 */}
-      <div className={`grid gap-1 ${viewType === 'day' ? 'grid-cols-1' : 'grid-cols-7'}`}>
+      <div className={`grid gap-0.5 lg:gap-1 ${viewType === 'day' ? 'grid-cols-1' : 'grid-cols-7'}`}>
         {/* 星期標頭 - 只在月視圖和週視圖顯示 */}
         {viewType !== 'day' && ['日', '一', '二', '三', '四', '五', '六'].map((day) => (
-          <div key={day} className="p-2 text-center font-medium text-gray-500">
+          <div key={day} className="p-1 lg:p-2 text-center font-medium text-gray-500 text-xs lg:text-sm">
             {day}
           </div>
         ))}
@@ -324,7 +335,11 @@ export function Calendar() {
           return (
             <div
               key={date.toString()}
-              className={`${viewType === 'day' ? 'min-h-[400px]' : 'min-h-[100px]'} p-2 border cursor-pointer transition-colors ${
+              className={`${
+                viewType === 'day' 
+                  ? 'min-h-[300px] lg:min-h-[400px]' 
+                  : 'min-h-[80px] lg:min-h-[100px]'
+              } p-1 lg:p-2 border cursor-pointer transition-colors ${
                 isSelected ? 'bg-blue-100 border-blue-300' : 'border-gray-200'
               } ${
                 isToday(date) ? 'bg-blue-50' : ''
@@ -335,7 +350,11 @@ export function Calendar() {
               }`}
               onClick={() => !isNotAvailable && handleDateClick(date)}
             >
-              <div className={`font-medium ${viewType === 'day' ? 'text-lg mb-4' : 'text-sm'}`}>
+              <div className={`font-medium ${
+                viewType === 'day' 
+                  ? 'text-base lg:text-lg mb-2 lg:mb-4' 
+                  : 'text-xs lg:text-sm'
+              }`}>
                 {viewType === 'day' 
                   ? format(date, 'MM月dd日 EEEE', { locale: zhTW })
                   : format(date, 'd')
@@ -343,11 +362,15 @@ export function Calendar() {
               </div>
               
               {/* 預約資訊 */}
-              <div className={`mt-1 space-y-1 ${viewType === 'day' ? 'space-y-2' : ''}`}>
-                {dayBookings.slice(0, viewType === 'day' ? 10 : 3).map((booking) => (
+              <div className={`mt-1 space-y-0.5 lg:space-y-1 ${viewType === 'day' ? 'lg:space-y-2' : ''}`}>
+                {dayBookings.slice(0, viewType === 'day' ? 10 : (viewType === 'month' ? 2 : 3)).map((booking) => (
                   <div
                     key={booking.id}
-                    className={`${viewType === 'day' ? 'text-sm p-2' : 'text-xs p-1'} rounded border cursor-pointer hover:opacity-80 transition-opacity ${
+                    className={`${
+                      viewType === 'day' 
+                        ? 'text-xs lg:text-sm p-1.5 lg:p-2' 
+                        : 'text-xs p-1'
+                    } rounded border cursor-pointer hover:opacity-80 transition-opacity ${
                       booking.status === 'REJECTED' ? 'opacity-60' : ''
                     }`}
                     style={{
@@ -360,18 +383,35 @@ export function Calendar() {
                   >
                     <div className="flex items-center gap-1 truncate">
                       <div 
-                        className={`${viewType === 'day' ? 'w-3 h-3' : 'w-2 h-2'} rounded-full border`}
+                        className={`${
+                          viewType === 'day' 
+                            ? 'w-2.5 h-2.5 lg:w-3 lg:h-3' 
+                            : 'w-1.5 h-1.5 lg:w-2 lg:h-2'
+                        } rounded-full border flex-shrink-0`}
                         style={{ 
                           backgroundColor: booking.equipment.color || '#9CA3AF',
                           borderColor: booking.equipment.color ? hexToRgba(booking.equipment.color, 0.5) : '#D1D5DB'
                         }}
                       ></div>
-                      <span className="truncate font-medium">{booking.equipment.name}</span>
+                      <span className="truncate font-medium text-xs lg:text-sm">
+                        {viewType === 'month' ? booking.equipment.name.substring(0, 4) : booking.equipment.name}
+                      </span>
                     </div>
-                    <div className={`flex items-center gap-1 ${viewType === 'day' ? 'text-sm' : 'text-xs'} opacity-75`}>
-                      <Clock className={`${viewType === 'day' ? 'h-3 w-3' : 'h-2.5 w-2.5'}`} />
-                      {format(booking.startTime, 'HH:mm')} - {format(booking.endTime, 'HH:mm')}
-                      <span className={`${viewType === 'day' ? 'text-sm' : 'text-xs'} font-medium ${
+                    <div className={`flex items-center gap-1 text-xs opacity-75 ${viewType === 'day' ? 'lg:text-sm' : ''}`}>
+                      <Clock className={`${
+                        viewType === 'day' 
+                          ? 'h-2.5 w-2.5 lg:h-3 lg:w-3' 
+                          : 'h-2 w-2 lg:h-2.5 lg:w-2.5'
+                      } flex-shrink-0`} />
+                      <span className="truncate">
+                        {viewType === 'day' 
+                          ? `${format(booking.startTime, 'HH:mm')} - ${format(booking.endTime, 'HH:mm')}`
+                          : format(booking.startTime, 'HH:mm')
+                        }
+                      </span>
+                      <span className={`${
+                        viewType === 'day' ? 'text-xs lg:text-sm' : 'text-xs'
+                      } font-medium flex-shrink-0 ${
                         booking.status === 'PENDING' ? 'text-orange-600' :
                         booking.status === 'APPROVED' ? 'text-green-600' :
                         'text-red-600'
@@ -388,16 +428,20 @@ export function Calendar() {
                     )}
                   </div>
                 ))}
-                {dayBookings.length > (viewType === 'day' ? 10 : 3) && (
-                  <div className={`${viewType === 'day' ? 'text-sm' : 'text-xs'} text-gray-500 p-1`}>
-                    +{dayBookings.length - (viewType === 'day' ? 10 : 3)} 更多預約
+                {dayBookings.length > (viewType === 'day' ? 10 : (viewType === 'month' ? 2 : 3)) && (
+                  <div className={`${
+                    viewType === 'day' ? 'text-xs lg:text-sm' : 'text-xs'
+                  } text-gray-500 p-1`}>
+                    +{dayBookings.length - (viewType === 'day' ? 10 : (viewType === 'month' ? 2 : 3))} 更多
                   </div>
                 )}
               </div>
 
               {/* 不可預約日期標示 */}
               {isNotAvailable && (
-                <div className={`${viewType === 'day' ? 'text-sm' : 'text-xs'} text-red-500 mt-1`}>
+                <div className={`${
+                  viewType === 'day' ? 'text-xs lg:text-sm' : 'text-xs'
+                } text-red-500 mt-1`}>
                   不開放
                 </div>
               )}

@@ -58,21 +58,21 @@ export function EquipmentSelectDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto mx-4 sm:mx-0">
         <DialogHeader>
-          <DialogTitle>選擇設備</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-lg lg:text-xl">選擇設備</DialogTitle>
+          <DialogDescription className="text-sm lg:text-base">
             選擇要預約的設備 - {format(selectedDate, 'yyyy年MM月dd日', { locale: zhTW })}
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-3">
-          <Label>請選擇設備：</Label>
-          <div className="grid gap-3">
+        <div className="space-y-3 lg:space-y-4">
+          <Label className="text-sm lg:text-base">請選擇設備：</Label>
+          <div className="grid gap-2 lg:gap-3 max-h-[60vh] overflow-y-auto">
             {equipment.map((eq) => (
               <div
                 key={eq.id}
-                className={`p-4 rounded-lg border-2 cursor-pointer transition-all hover:bg-gray-50 ${
+                className={`p-3 lg:p-4 rounded-lg border-2 cursor-pointer transition-all hover:bg-gray-50 ${
                   selectedEquipment?.id === eq.id 
                     ? 'ring-2 ring-blue-500 bg-blue-50' 
                     : ''
@@ -82,27 +82,27 @@ export function EquipmentSelectDialog({
                 }}
                 onClick={() => setSelectedEquipment(eq)}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 lg:gap-3">
                   <div 
-                    className="w-4 h-4 rounded-full border-2"
+                    className="w-3 h-3 lg:w-4 lg:h-4 rounded-full border-2 flex-shrink-0"
                     style={{ 
                       backgroundColor: eq.color || '#9CA3AF',
                       borderColor: eq.color ? hexToRgba(eq.color, 0.5) : '#D1D5DB'
                     }}
                   ></div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{eq.name}</h3>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-gray-900 text-sm lg:text-base truncate">{eq.name}</h3>
                     {eq.description && (
-                      <p className="text-sm text-gray-600 mt-1">{eq.description}</p>
+                      <p className="text-xs lg:text-sm text-gray-600 mt-1 line-clamp-2">{eq.description}</p>
                     )}
                     {eq.location && (
-                      <p className="text-xs text-gray-500 mt-1">{eq.location}</p>
+                      <p className="text-xs text-gray-500 mt-1 truncate">{eq.location}</p>
                     )}
                   </div>
-                  <div className="w-5 h-5">
+                  <div className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0">
                     {selectedEquipment?.id === eq.id && (
-                      <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                        <div className="w-2 h-2 rounded-full bg-white"></div>
+                      <div className="w-4 h-4 lg:w-5 lg:h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-white"></div>
                       </div>
                     )}
                   </div>
@@ -112,17 +112,19 @@ export function EquipmentSelectDialog({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:gap-0">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
+            className="flex-1 sm:flex-initial"
           >
             取消
           </Button>
           <Button 
             onClick={handleSubmit}
             disabled={!selectedEquipment}
+            className="flex-1 sm:flex-initial"
           >
             確認選擇
           </Button>
