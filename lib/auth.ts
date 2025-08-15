@@ -1,47 +1,46 @@
 import { NextAuthOptions } from 'next-auth'
-import { PrismaAdapter } from '@next-auth/prisma-adapter'
-import GoogleProvider from 'next-auth/providers/google'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { prisma } from './prisma'
+import { PrismaAdapter } from '@next-auth/prisma-adapter'
+import { prisma } from '@/lib/prisma'
+import bcrypt from 'bcryptjs'
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
+  session: {
+    strategy: 'jwt',
+  },
+  pages: {
+    signIn: '/auth/signin',
+  },
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
+        password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null
+        if (!credentials?.email || !credentials?.password) {
+          return null
+        }
 
-        // 查找用戶
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
+          where: {
+            email: credentials.email
+          }
         })
 
-        if (!user) return null
+        if (!user || !user.password) {
+          return null
+        }
 
-        // 檢查密碼
-        if (user.password) {
-          // 如果用戶有密碼，使用 bcrypt 驗證
-          const bcrypt = await import('bcryptjs')
-          const isValid = await bcrypt.default.compare(credentials.password, user.password)
-          if (!isValid) return null
-        } else {
-          // 舊版本相容性：檢查硬編碼密碼
-          if (credentials.email === 'admin@example.com' && credentials.password === 'admin123') {
-            // 允許通過
-          } else if (credentials.email === 'user@example.com' && credentials.password === 'user123') {
-            // 允許通過
-          } else {
-            return null
-          }
+        const isPasswordValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        )
+
+        if (!isPasswordValid) {
+          return null
         }
 
         return {
@@ -53,26 +52,24 @@ export const authOptions: NextAuthOptions = {
       }
     })
   ],
-  pages: {
-    signIn: '/auth/signin',
-  },
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = (user as any).role
-        token.id = user.id
-      }
-      return token
-    },
-    async session({ session, token }) {
+    async session({ token, session }) {
       if (token) {
         session.user.id = token.id as string
-        session.user.role = token.role as string
+        session.user.name = token.name
+        session.user.email = token.email
+        session.user.role = token.role
       }
+
       return session
     },
-  },
-  session: {
-    strategy: 'jwt',
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id
+        token.role = (user as any).role
+      }
+
+      return token
+    },
   },
 }

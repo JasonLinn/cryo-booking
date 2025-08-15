@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { EquipmentStatus } from '@prisma/client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,16 +28,16 @@ export async function POST(request: NextRequest) {
       data: {
         name: '低溫槽 A',
         description: '主要低溫槽設備',
-        status: 'AVAILABLE',
-      } as any
+        status: EquipmentStatus.AVAILABLE,
+      }
     });
 
     const equipment2 = await prisma.equipment.create({
       data: {
         name: '低溫槽 B',
         description: '備用低溫槽設備',
-        status: 'AVAILABLE',
-      } as any
+        status: EquipmentStatus.AVAILABLE,
+      }
     });
 
     // 建立時段資料

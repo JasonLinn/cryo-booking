@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { NextRequest } from 'next/server'
+import { EquipmentStatus } from '@prisma/client'
 
 // 防止靜態生成時調用
 export const dynamic = 'force-dynamic'
@@ -23,28 +24,28 @@ export async function GET(request: NextRequest) {
         description: '冷凍乾燥設備 A',
         location: '實驗室 A 區',
         color: '#FF6B6B', // 紅色
-        status: 'AVAILABLE',
+        status: EquipmentStatus.AVAILABLE,
       },
       {
         name: '設備 B', 
         description: '冷凍乾燥設備 B',
         location: '實驗室 B 區',
         color: '#4ECDC4', // 藍綠色
-        status: 'AVAILABLE',
+        status: EquipmentStatus.AVAILABLE,
       },
       {
         name: '設備 C',
         description: '冷凍乾燥設備 C', 
         location: '實驗室 C 區',
         color: '#45B7D1', // 藍色
-        status: 'AVAILABLE',
+        status: EquipmentStatus.AVAILABLE,
       },
       {
         name: '設備 D',
         description: '冷凍乾燥設備 D',
         location: '實驗室 D 區', 
         color: '#96CEB4', // 綠色
-        status: 'AVAILABLE',
+        status: EquipmentStatus.AVAILABLE,
       },
     ]
 

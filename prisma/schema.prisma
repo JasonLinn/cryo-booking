@@ -1,18 +1,18 @@
-// 開發環境 Prisma Schema (SQLite)
+// 生產環境 Prisma Schema (PostgreSQL)
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
   id       String @id @default(cuid())
   email    String @unique
   name     String?
-  role     String @default("USER") // USER, ADMIN
+  role     Role   @default(USER)
   password String?
   
   // NextAuth 相關欄位
@@ -71,7 +71,7 @@ model Equipment {
   description String?
   location    String?
   color       String?
-  status      String    @default("AVAILABLE") // AVAILABLE, ASK_ADMIN, PREPARING, MAINTENANCE, UNAVAILABLE
+  status      EquipmentStatus @default(AVAILABLE)
   
   bookings Booking[]
   timeSlots TimeSlot[]
@@ -109,7 +109,7 @@ model Booking {
   startTime DateTime
   endTime   DateTime
   purpose   String
-  status    String @default("PENDING") // PENDING, APPROVED, REJECTED
+  status    BookingStatus @default(PENDING)
   
   // 審核資訊
   approvedAt   DateTime?
@@ -122,4 +122,22 @@ model Booking {
   updatedAt DateTime @updatedAt
 }
 
-// 注意：SQLite 不支援原生 enum，所以使用字串型態並加上註解說明可用值
+// PostgreSQL 支援原生 enum
+enum Role {
+  USER
+  ADMIN
+}
+
+enum EquipmentStatus {
+  AVAILABLE    // 開放預約
+  ASK_ADMIN    // 請詢問管理員  
+  PREPARING    // 籌備中
+  MAINTENANCE  // 維護中
+  UNAVAILABLE  // 停用
+}
+
+enum BookingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}

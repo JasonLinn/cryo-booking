@@ -1,281 +1,209 @@
-# 低溫設備預約系統 (Cryo Booking System)
+# 冷凍乾燥設備預約系統 (Cryo Equipment Booking System)
 
-一個基於 Next.js 的實驗室低溫設備線上預約管理系統，支援訪客預約與使用者登入雙重模式。
+> 🚀 **狀態**：已完成並可部署到生產環境  
+> 🗃️ **資料庫**：PostgreSQL (已從 SQLite 遷移)  
+> 📱 **支援**：完整響應式設計，支援手機、平板、桌面裝置
 
-## 功能特色
+## ✨ 主要功能
 
-### 訪客功能 (無需登入)
-- ✅ 直接預約設備 - 提供姓名和聯絡信箱即可
-- ✅ 查看設備預約狀況
-- ✅ 直觀的日曆介面
-- ✅ 即時預約狀態更新
+### 🎯 核心功能
+- **日期優先預約流程**：點擊日曆日期 → 選擇設備 → 完成預約
+- **多時間檢視**：支援月/週/日檢視切換
+- **設備狀態管理**：5種設備狀態（開放預約/請詢問管理員/籌備中/維護中/不可用）
+- **預約審核系統**：管理員可審核預約申請
+- **電子郵件通知**：預約成功自動寄信通知使用者
+- **響應式設計**：完整手機版面優化
 
-### 使用者功能 (登入後)
-- ✅ 使用者身份驗證 (Google OAuth / 帳號密碼)
-- ✅ 查看個人預約記錄和狀態
-- ✅ 完整的預約管理功能
-- ✅ 郵件通知 (預約核准/拒絕)
+### 👥 使用者角色
+- **一般使用者**：瀏覽設備、建立預約、查看我的預約
+- **系統管理員**：設備管理、預約審核、系統設定
 
-### 管理員功能
-- ✅ 預約申請審核 (包含訪客預約)
-- ✅ 設備管理 (新增/編輯/停用)
-- ✅ 時段設定 (不同設備可設定不同可用時段)
-- ✅ 使用者管理
-- ✅ 統計面板
+### 🔧 設備管理
+- **四種冷凍乾燥設備**：設備 A、B、C、D
+- **靈活時段設定**：每台設備可獨立設定可用時段
+- **工作日限制**：預設週一至週五開放，週末關閉
+- **狀態控制**：精細的設備狀態管理
 
-### 系統特色
-- � 支援訪客預約 - 無需註冊即可使用
-- 🔐 可選登入系統 - 提供完整使用者體驗
-- �🔒 平日開放，假日自動關閉
-- ⏰ 時間衝突檢測
-- 📧 自動郵件通知
-- 📱 響應式設計，支援手機/平板
-- 🚀 可部署至 Vercel
+## 🛠️ 技術架構
 
-## 技術架構
+### 前端技術
+- **Next.js 14.0.4** - React 框架 (App Router)
+- **TypeScript** - 型別安全
+- **Tailwind CSS** - 樣式框架
+- **shadcn/ui** - UI 元件庫
+- **date-fns** - 日期處理
+- **Lucide React** - 圖示庫
 
-- **框架**: Next.js 14 (App Router)
-- **資料庫**: SQLite (開發) / PostgreSQL (生產)
-- **ORM**: Prisma
-- **身份驗證**: NextAuth.js (可選)
-- **UI 元件**: Tailwind CSS + shadcn/ui
-- **郵件服務**: Resend (可選)
-- **部署**: Vercel
+### 後端技術
+- **Next.js API Routes** - 後端 API
+- **Prisma ORM** - 資料庫 ORM
+- **NextAuth.js** - 身份認證
+- **bcryptjs** - 密碼加密
 
-## 專案結構
+### 資料庫
+- **PostgreSQL** - 生產環境資料庫
+- **完整 Enum 支援** - 型別安全的狀態管理
+
+## 🚀 快速開始
+
+### 前置需求
+- Node.js 18+ 
+- PostgreSQL 資料庫
+- Git
+
+### 安裝步驟
+
+1. **複製專案**
+   ```bash
+   git clone <repository-url>
+   cd cryo-booking
+   ```
+
+2. **安裝相依套件**
+   ```bash
+   npm install
+   ```
+
+3. **環境設定**
+   ```bash
+   # 複製環境變數範本
+   cp .env.example .env
+   
+   # 編輯 .env 檔案，設定以下變數：
+   DATABASE_URL="postgresql://username:password@host:port/database"
+   NEXTAUTH_SECRET="your-secret-key"
+   NEXTAUTH_URL="http://localhost:3000"
+   ```
+
+4. **資料庫設定**
+   ```bash
+   # 生成 Prisma client
+   npx prisma generate
+   
+   # 推送資料庫 schema
+   npx prisma db push
+   
+   # 初始化基礎資料
+   curl http://localhost:3000/api/init
+   ```
+
+5. **啟動開發伺服器**
+   ```bash
+   npm run dev
+   ```
+
+6. **開啟瀏覽器**
+   訪問 `http://localhost:3000`
+
+## 📖 使用指南
+
+### 🎯 預約流程
+1. 在主頁日曆上點擊想要的日期
+2. 在彈出對話框中選擇可用的設備
+3. 填寫預約資訊（時間、用途等）
+4. 提交預約申請
+5. 等待管理員審核
+6. 收到電子郵件通知結果
+
+### 👨‍💼 管理員功能
+- **設備管理** (`/admin/equipment`)：新增、編輯、刪除設備
+- **狀態控制**：變更設備狀態（開放/維護/停用等）
+- **預約審核**：審核使用者的預約申請
+- **系統監控**：查看系統使用狀況
+
+### 📱 手機使用
+- 完整支援手機瀏覽器
+- 觸控友善的操作介面
+- 自適應螢幕尺寸
+- 手機優化的導航選單
+
+## 🎨 設備狀態系統
+
+| 狀態 | 徽章 | 可預約 | 說明 |
+|------|------|--------|------|
+| AVAILABLE | 🟢 開放預約 | ✅ | 設備正常運作，開放預約 |
+| ASK_ADMIN | 🟡 請詢問管理員 | ⚠️ | 需要管理員特別確認的預約 |
+| PREPARING | 🔵 籌備中 | ❌ | 設備準備中，暫時無法預約 |
+| MAINTENANCE | 🔴 維護中 | ❌ | 設備維護中，無法使用 |
+| UNAVAILABLE | ⚫ 不可用 | ❌ | 設備故障或長期停用 |
+
+## 🚀 部署指南
+
+### Vercel 部署 (推薦)
+1. 將專案推送到 GitHub
+2. 在 Vercel 連接 GitHub repository
+3. 設定環境變數：
+   - `DATABASE_URL`
+   - `NEXTAUTH_SECRET` 
+   - `NEXTAUTH_URL`
+4. 自動部署完成
+
+### 手動部署
+```bash
+# 建構專案
+npm run build
+
+# 啟動生產伺服器
+npm start
+```
+
+## 📁 專案結構
 
 ```
 cryo-booking/
-├── app/                    # Next.js App Router 頁面
+├── app/                    # Next.js 13+ App Router
+│   ├── (pages)/           # 頁面路由
 │   ├── api/               # API 路由
-│   ├── auth/              # 登入頁面
-│   ├── admin/             # 管理員頁面
-│   └── my-bookings/       # 使用者預約頁面
-├── components/            # React 元件
-│   ├── ui/               # 基礎 UI 元件
-│   ├── calendar.tsx      # 日曆元件
-│   ├── navbar.tsx        # 導航列
-│   └── ...
+│   └── admin/             # 管理員頁面
+├── components/            # 可重用元件
 ├── lib/                   # 工具函式
-│   ├── db.ts             # Prisma 客戶端
-│   ├── auth.ts           # NextAuth 設定
-│   ├── email.ts          # 郵件服務
-│   └── utils.ts          # 通用工具
-├── prisma/               # 資料庫 schema 和遷移
-└── types/                # TypeScript 類型定義
+├── prisma/                # 資料庫 schema 和遷移
+├── types/                 # TypeScript 型別定義
+└── public/                # 靜態資源
 ```
 
-## 快速開始
-
-### 1. 安裝相依套件
+## 🔧 開發指令
 
 ```bash
-npm install
-```
-
-### 2. 設定環境變數
-
-複製 `.env.example` 為 `.env.local` 並填入必要的設定：
-
-```bash
-cp .env.example .env.local
-```
-
-**開發模式 (SQLite)**:
-系統預設使用 SQLite 資料庫，無需額外設定即可開始開發。
-
-**生產模式 (PostgreSQL)** 必要設定：
-- `POSTGRES_PRISMA_URL`: PostgreSQL 資料庫連線字串
-- `NEXTAUTH_SECRET`: NextAuth 密鑰
-- `RESEND_API_KEY`: Resend 郵件服務 API Key (可選)
-
-### 3. 初始化資料庫
-
-```bash
-# 推送資料庫 schema (SQLite)
-npx prisma db push
-
-# 或使用遷移 (PostgreSQL)
-npx prisma migrate dev
-
-# 初始化示範資料
-# 啟動開發伺服器後，訪問 http://localhost:3000/api/init
-```
-
-### 4. 啟動開發伺服器
-
-```bash
+# 開發模式
 npm run dev
-```
 
-開啟 [http://localhost:3000](http://localhost:3000) 檢視應用程式。
-
-## 資料庫 Schema
-
-### 主要資料表
-
-- **User**: 使用者資訊
-- **Equipment**: 設備資訊
-- **TimeSlot**: 設備可用時段
-- **Booking**: 預約記錄
-
-### 預設資料
-
-系統會自動建立：
-- 4 個範例低溫設備
-- 平日 9:00-18:00 時段設定
-
-## 使用模式
-
-### 混合預約模式
-
-本系統支援兩種使用模式，可同時運作：
-
-**1. 訪客預約模式**
-- 無需註冊登入
-- 填寫姓名和聯絡信箱即可預約
-- 適合臨時使用者或開放式實驗室
-
-**2. 使用者登入模式**
-- 完整的使用者管理功能
-- 個人預約記錄追蹤
-- 適合固定團隊成員
-
-## 部署至 Vercel
-
-### 1. 準備專案
-
-```bash
-# 建構專案確認無誤
+# 建構專案
 npm run build
+
+# 型別檢查
+npm run type-check
+
+# 資料庫管理
+npx prisma studio
 ```
 
-### 2. 設定 Vercel Postgres
+## 📚 相關文件
 
-1. 在 Vercel 專案中新增 Postgres 資料庫
-2. 複製資料庫連線變數到環境設定
+- **[遷移記錄](./MIGRATION_LOG.md)** - 資料庫遷移詳細記錄
+- **[專案設定](./PROJECT_CONFIG.md)** - 完整專案配置說明
+- **[快速啟動](./QUICK_START.md)** - 開發者快速上手指南
+- **[資料庫設定](./DATABASE_CONFIG.md)** - 資料庫詳細設定說明
 
-### 3. 設定環境變數
+## 🤝 貢獻指南
 
-在 Vercel 專案設定中加入：
-- `NEXTAUTH_SECRET`
-- `NEXTAUTH_URL`
-- `RESEND_API_KEY`
-- `GOOGLE_CLIENT_ID` (可選)
-- `GOOGLE_CLIENT_SECRET` (可選)
+1. Fork 專案
+2. 建立功能分支 (`git checkout -b feature/amazing-feature`)
+3. 提交變更 (`git commit -m 'Add amazing feature'`)
+4. 推送分支 (`git push origin feature/amazing-feature`)
+5. 開啟 Pull Request
 
-### 4. 部署
+## 📄 授權
 
-```bash
-# 使用 Vercel CLI
-npx vercel
+此專案採用 MIT 授權 - 詳見 [LICENSE](LICENSE) 檔案
 
-# 或推送到 GitHub 後連結 Vercel 自動部署
-```
+## 📞 支援
 
-### 5. 初始化生產資料庫
+如遇到問題，請：
+1. 查看 [快速啟動指南](./QUICK_START.md)
+2. 檢查 [常見問題解決方案](./DATABASE_CONFIG.md#常見錯誤解決)
+3. 開啟 GitHub Issue
 
-部署完成後，在 Vercel 函式中執行：
+---
 
-```bash
-# 推送 schema
-npx prisma db push
-
-# 建立種子資料
-npx prisma db seed
-```
-
-## 使用指南
-
-### 訪客使用者 (無需登入)
-
-1. **進入系統**: 直接訪問網站首頁
-2. **選擇設備**: 點選要預約的設備
-3. **選擇時間**: 點擊日曆上的日期，選擇時間段
-4. **填寫資訊**: 輸入姓名、聯絡信箱和單位/所屬PI
-5. **提交預約**: 等待管理員審核
-
-### 註冊使用者
-
-1. **登入系統**: 使用 Google 帳號或註冊新帳號
-2. **選擇設備**: 在首頁點選要預約的設備
-3. **選擇時間**: 點擊日曆上的日期，選擇時間段
-4. **填寫申請**: 輸入單位/所屬PI並提交
-5. **查看記錄**: 在「我的預約」中追蹤預約狀態
-6. **接收通知**: 管理員審核後會收到郵件通知
-
-### 管理員
-
-1. **審核預約**: 前往管理面板查看待審核申請 (包含訪客預約)
-2. **管理設備**: 新增或編輯設備資訊
-3. **設定時段**: 為不同設備設定可用時間
-4. **查看統計**: 監控系統使用情況
-
-## 開發
-
-### 資料庫切換
-
-**開發環境 (SQLite)**:
-```bash
-# 使用 SQLite (預設)
-npx prisma db push
-```
-
-**生產環境 (PostgreSQL)**:
-```bash
-# 修改 prisma/schema.prisma 中的 datasource
-provider = "postgresql"
-url      = env("POSTGRES_PRISMA_URL")
-
-# 執行遷移
-npx prisma migrate deploy
-```
-
-### 新增設備類型
-
-1. 在 `prisma/schema.prisma` 中修改 Equipment model
-2. 執行 `npx prisma db push` 更新資料庫 (SQLite) 或 `npx prisma migrate dev` (PostgreSQL)
-3. 在 `/api/init` 端點中新增範例資料
-
-### 自訂訪客預約流程
-
-修改 `components/booking-dialog.tsx` 來自訂訪客預約時需要的額外資訊欄位。
-
-### 自訂時段規則
-
-修改 `lib/utils.ts` 中的 `isTimeSlotAvailable` 函式來實作自訂的時段檢查邏輯。
-
-### 新增通知方式
-
-在 `lib/email.ts` 中擴展 `sendEmail` 函式來支援其他通知方式 (如 LINE、SMS)。
-
-## 故障排除
-
-### 常見問題
-
-**Q: 訪客預約後如何追蹤狀態？**
-A: 訪客預約會透過提供的聯絡信箱接收狀態更新通知
-
-**Q: 如何切換為純登入模式？**
-A: 在 `app/page.tsx` 中重新啟用身份驗證檢查即可
-
-**Q: 如何自訂訪客預約表單？**
-A: 修改 `components/booking-dialog.tsx` 中非登入使用者的表單區塊
-
-### 開發模式除錯
-
-```bash
-# 檢視資料庫內容
-npm run db:studio
-
-# 檢查 API 端點
-curl http://localhost:3000/api/equipment
-```
-
-## 貢獻
-
-歡迎提交 Issue 和 Pull Request 來改善這個專案！
-
-## 授權
-
-MIT License - 詳見 [LICENSE](LICENSE) 檔案。
+**⚠️ 重要提醒**：此專案已遷移到 PostgreSQL，請勿使用舊的 SQLite 設定檔案。

@@ -38,8 +38,8 @@ npm run dev
 
 ## 測試帳號
 
-- 管理員：admin@example.com
-- 一般使用者：user@example.com
+- 管理員：admin@localhost (密碼：admin123)
+- 一般使用者：user@example.com (密碼：user123)
 
 ## 可用指令
 
