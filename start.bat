@@ -1,5 +1,5 @@
 @echo off
-echo 低溫設備預約系統 - 快速啟動
+echo TissueCryoEM core預約系統 - 快速啟動
 echo ========================================
 echo.
 

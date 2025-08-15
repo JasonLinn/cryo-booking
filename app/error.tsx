@@ -45,7 +45,7 @@ export default function Error({
           </div>
           
           <div className="text-sm text-gray-500">
-            <p>低溫設備預約系統</p>
+            <p>TissueCryoEM core預約系統</p>
           </div>
         </div>
       </div>
