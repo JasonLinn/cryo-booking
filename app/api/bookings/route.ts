@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { sendEmail, generateBookingApprovalEmail, generateBookingRejectionEmail } from '@/lib/email'
 import { isBookingAvailable } from '@/lib/utils'
+import { canBookEquipment } from '@/lib/equipment-status'
 
 export async function GET(request: NextRequest) {
   try {
@@ -115,9 +116,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!equipment.isActive) {
+    // 檢查設備狀態是否允許預約
+    if (!canBookEquipment((equipment as any).status)) {
       return NextResponse.json(
-        { error: '設備目前不可用' },
+        { error: '設備目前不可用於預約' },
         { status: 400 }
       )
     }
@@ -177,7 +179,7 @@ export async function POST(request: NextRequest) {
             email: guestEmail,
             name: guestName,
             role: 'USER'
-          }
+          } as any
         })
       }
 

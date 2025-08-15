@@ -1,20 +1,18 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
+// 開發環境 Prisma Schema (SQLite)
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
   id       String @id @default(cuid())
   email    String @unique
   name     String?
-  role     String @default("USER") // "USER" | "ADMIN"
+  role     String @default("USER") // USER, ADMIN
   password String?
   
   // NextAuth 相關欄位
@@ -72,8 +70,8 @@ model Equipment {
   name        String
   description String?
   location    String?
-  color       String? // 設備顏色
-  isActive    Boolean @default(true)
+  color       String?
+  status      String    @default("AVAILABLE") // AVAILABLE, ASK_ADMIN, PREPARING, MAINTENANCE, UNAVAILABLE
   
   bookings Booking[]
   timeSlots TimeSlot[]
@@ -111,7 +109,7 @@ model Booking {
   startTime DateTime
   endTime   DateTime
   purpose   String
-  status    String @default("PENDING") // "PENDING" | "APPROVED" | "REJECTED"
+  status    String @default("PENDING") // PENDING, APPROVED, REJECTED
   
   // 審核資訊
   approvedAt   DateTime?
@@ -123,3 +121,5 @@ model Booking {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// 注意：SQLite 不支援原生 enum，所以使用字串型態並加上註解說明可用值

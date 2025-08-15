@@ -13,8 +13,9 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
-import { Settings, Palette, Save, Plus, Edit2, Trash2, Power, PowerOff } from 'lucide-react'
+import { Settings, Palette, Save, Plus, Edit2, Trash2, Power, PowerOff, CheckCircle, AlertCircle, Wrench, Clock, XCircle } from 'lucide-react'
 import { toast } from '@/components/ui/use-toast'
+import { EquipmentStatus, getEquipmentStatusConfig, getStatusBadgeClass, getStatusLabel, EQUIPMENT_STATUS_CONFIG } from '@/lib/equipment-status'
 
 interface Equipment {
   id: string
@@ -22,7 +23,7 @@ interface Equipment {
   description?: string
   location?: string
   color?: string
-  isActive: boolean
+  status: EquipmentStatus
   createdAt: string
   updatedAt: string
   _count?: {
@@ -59,7 +60,7 @@ function EditEquipmentDialog({ equipment, open, onOpenChange, onSave }: EditEqui
     description: '',
     location: '',
     color: '#FF6B6B',
-    isActive: true
+    status: 'AVAILABLE' as EquipmentStatus
   })
   const [saving, setSaving] = useState(false)
 
@@ -70,7 +71,7 @@ function EditEquipmentDialog({ equipment, open, onOpenChange, onSave }: EditEqui
         description: equipment.description || '',
         location: equipment.location || '',
         color: equipment.color || '#FF6B6B',
-        isActive: equipment.isActive
+        status: equipment.status
       })
     } else {
       setFormData({
@@ -78,7 +79,7 @@ function EditEquipmentDialog({ equipment, open, onOpenChange, onSave }: EditEqui
         description: '',
         location: '',
         color: '#FF6B6B',
-        isActive: true
+        status: 'AVAILABLE' as EquipmentStatus
       })
     }
   }, [equipment])
@@ -208,13 +209,20 @@ function EditEquipmentDialog({ equipment, open, onOpenChange, onSave }: EditEqui
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="isActive"
-              checked={formData.isActive}
-              onCheckedChange={(checked: boolean) => setFormData({ ...formData, isActive: checked })}
-            />
-            <Label htmlFor="isActive">啟用設備</Label>
+          <div className="space-y-2">
+            <Label htmlFor="status">設備狀態</Label>
+            <select 
+              id="status"
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value as EquipmentStatus })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="AVAILABLE">可預約</option>
+              <option value="ASK_ADMIN">請詢問管理員</option>
+              <option value="PREPARING">籌備中</option>
+              <option value="MAINTENANCE">維護中</option>
+              <option value="UNAVAILABLE">不可預約</option>
+            </select>
           </div>
         </div>
 
@@ -289,33 +297,7 @@ export default function EquipmentManagement() {
     setShowEditDialog(true)
   }
 
-  const handleToggleActive = async (eq: Equipment) => {
-    try {
-      const response = await fetch(`/api/equipment/${eq.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ isActive: !eq.isActive }),
-      })
-
-      if (response.ok) {
-        toast({
-          title: "成功",
-          description: `設備已${!eq.isActive ? '啟用' : '停用'}`
-        })
-        fetchEquipment()
-      } else {
-        throw new Error('操作失敗')
-      }
-    } catch (error) {
-      toast({
-        title: "錯誤",
-        description: "狀態切換失敗",
-        variant: "destructive"
-      })
-    }
-  }
+  // 移除了 handleToggleActive 函式，因為現在使用狀態系統而非簡單切換
 
   const handleDelete = async (eq: Equipment) => {
     try {
@@ -399,8 +381,15 @@ export default function EquipmentManagement() {
                   <CardTitle className="text-lg">{eq.name}</CardTitle>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Badge variant={eq.isActive ? 'default' : 'secondary'}>
-                    {eq.isActive ? '啟用' : '停用'}
+                  <Badge 
+                    variant={eq.status === 'AVAILABLE' ? 'default' : 
+                            eq.status === 'ASK_ADMIN' ? 'secondary' : 'destructive'}
+                  >
+                    {eq.status === 'AVAILABLE' ? '可預約' :
+                     eq.status === 'ASK_ADMIN' ? '請詢問管理員' :
+                     eq.status === 'PREPARING' ? '籌備中' :
+                     eq.status === 'MAINTENANCE' ? '維護中' :
+                     '不可預約'}
                   </Badge>
                 </div>
               </div>
@@ -429,18 +418,6 @@ export default function EquipmentManagement() {
                 >
                   <Edit2 className="h-3 w-3 mr-1" />
                   編輯
-                </Button>
-                
-                <Button
-                  variant={eq.isActive ? "destructive" : "default"}
-                  size="sm"
-                  onClick={() => handleToggleActive(eq)}
-                >
-                  {eq.isActive ? (
-                    <PowerOff className="h-3 w-3" />
-                  ) : (
-                    <Power className="h-3 w-3" />
-                  )}
                 </Button>
 
                 <AlertDialog>

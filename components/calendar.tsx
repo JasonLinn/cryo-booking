@@ -11,6 +11,7 @@ import { BookingDialog } from './booking-dialog'
 import { BookingDetailsDialog } from './booking-details-dialog'
 import { EquipmentSelectDialog } from './equipment-select-dialog'
 import { isPublicHoliday, isBookingAvailable } from '@/lib/utils'
+import { type EquipmentStatus } from '@/lib/equipment-status'
 
 interface Equipment {
   id: string
@@ -18,6 +19,7 @@ interface Equipment {
   description?: string
   location?: string
   color?: string // 新增顏色欄位
+  status: EquipmentStatus // 新增狀態欄位
 }
 
 interface User {

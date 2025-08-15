@@ -12,7 +12,7 @@ model User {
   id       String @id @default(cuid())
   email    String @unique
   name     String?
-  role     Role   @default(USER)
+  role     String @default("USER") // USER, ADMIN
   password String?
   
   // NextAuth 相關欄位
@@ -70,7 +70,8 @@ model Equipment {
   name        String
   description String?
   location    String?
-  isActive    Boolean @default(true)
+  color       String?
+  status      String    @default("AVAILABLE") // AVAILABLE, ASK_ADMIN, PREPARING, MAINTENANCE, UNAVAILABLE
   
   bookings Booking[]
   timeSlots TimeSlot[]
@@ -108,7 +109,7 @@ model Booking {
   startTime DateTime
   endTime   DateTime
   purpose   String
-  status    BookingStatus @default(PENDING)
+  status    String @default("PENDING") // PENDING, APPROVED, REJECTED
   
   // 審核資訊
   approvedAt   DateTime?
@@ -121,14 +122,4 @@ model Booking {
   updatedAt DateTime @updatedAt
 }
 
-// Enums (使用字串型態，因為 SQLite 不支援原生 enum)
-enum Role {
-  USER
-  ADMIN
-}
-
-enum BookingStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
+// 注意：SQLite 不支援原生 enum，所以使用字串型態並加上註解說明可用值
