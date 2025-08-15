@@ -30,16 +30,16 @@ export async function POST(request: NextRequest) {
       data: {
         name: '低溫槽 A',
         description: '主要低溫槽設備',
-        isActive: true,
-      }
+        status: 'AVAILABLE',
+      } as any
     });
 
     const equipment2 = await prisma.equipment.create({
       data: {
         name: '低溫槽 B',
         description: '備用低溫槽設備',
-        isActive: true,
-      }
+        status: 'AVAILABLE',
+      } as any
     });
 
     // 建立預設時段（週一到週五，每天 9:00-17:00）

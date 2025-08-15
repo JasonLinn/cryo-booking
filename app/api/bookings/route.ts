@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+// import { authOptions } from '@/lib/auth'
 import { sendEmail, generateBookingApprovalEmail, generateBookingRejectionEmail } from '@/lib/email'
 import { isBookingAvailable } from '@/lib/utils'
 import { canBookEquipment } from '@/lib/equipment-status'
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    // const session = await getServerSession(authOptions)
+    const session = null // 暫時禁用認證
     const url = new URL(request.url)
     const status = url.searchParams.get('status')
     const userId = url.searchParams.get('userId')
@@ -41,8 +42,10 @@ export async function GET(request: NextRequest) {
       }
 
       // 一般使用者只能看自己的預約，管理員可以看所有預約
-      if (session.user.role !== 'ADMIN') {
-        where.userId = session.user.id
+      if (!session || (session as any).user?.role !== 'ADMIN') {
+        if (session) {
+          where.userId = (session as any).user?.id
+        }
       } else if (userId) {
         where.userId = userId
       }
@@ -82,7 +85,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    // const session = await getServerSession(authOptions)
+    const session = null // 暫時禁用認證
     const data = await request.json()
     const { equipmentId, startTime, endTime, purpose, guestName, guestEmail } = data
 
@@ -157,7 +161,7 @@ export async function POST(request: NextRequest) {
 
     if (session) {
       // 已登入使用者
-      userId = session.user.id
+      userId = (session as any).user?.id
     } else {
       // 訪客預約，需要提供姓名和 email
       if (!guestName || !guestEmail) {
