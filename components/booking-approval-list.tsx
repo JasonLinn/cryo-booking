@@ -1,227 +1,193 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { Booking, User, Equipment } from '@prisma/client'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/components/ui/use-toast'
-import { formatDateTime } from '@/lib/utils'
-import { Check, X, Clock, User, MapPin } from 'lucide-react'
 
-interface Booking {
-  id: string
-  startTime: Date
-  endTime: Date
-  purpose: string
-  status: 'PENDING' | 'APPROVED' | 'REJECTED'
-  notes?: string
-  adminNotes?: string
-  createdAt: Date
-  user: {
-    id: string
-    name: string
-    email: string
-    department?: string
-  }
-  equipment: {
-    id: string
-    name: string
-    location?: string
-  }
+type BookingWithRelations = Booking & {
+  user: User | null
+  equipment: Equipment | null
 }
 
-export function BookingApprovalList() {
-  const [bookings, setBookings] = useState<Booking[]>([])
-  const [loading, setLoading] = useState(true)
-  const [processingId, setProcessingId] = useState<string | null>(null)
-  const [adminNotes, setAdminNotes] = useState<Record<string, string>>({})
+interface BookingApprovalListProps {
+  bookings: BookingWithRelations[]
+  showActions?: boolean
+}
+
+export default function BookingApprovalList({ 
+  bookings: initialBookings, 
+  showActions = true 
+}: BookingApprovalListProps) {
+  const [bookings, setBookings] = useState<BookingWithRelations[]>(initialBookings)
+  const [loading, setLoading] = useState<string | null>(null)
   const { toast } = useToast()
 
-  useEffect(() => {
-    fetchBookings()
-  }, [])
-
-  const fetchBookings = async () => {
-    try {
-      const response = await fetch('/api/bookings?status=PENDING')
-      if (response.ok) {
-        const data = await response.json()
-        const processedBookings = data.map((booking: any) => ({
-          ...booking,
-          startTime: new Date(booking.startTime),
-          endTime: new Date(booking.endTime),
-          createdAt: new Date(booking.createdAt),
-        }))
-        setBookings(processedBookings)
-      }
-    } catch (error) {
-      console.error('取得預約列表失敗:', error)
-      toast({
-        title: '載入失敗',
-        description: '無法載入預約列表',
-        variant: 'destructive',
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleApproval = async (bookingId: string, status: 'APPROVED' | 'REJECTED') => {
-    setProcessingId(bookingId)
-    
+  const handleApproval = async (bookingId: string, action: 'approve' | 'reject') => {
+    setLoading(bookingId)
     try {
       const response = await fetch(`/api/bookings/${bookingId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          status,
-          adminNotes: adminNotes[bookingId] || '',
+        body: JSON.stringify({ 
+          status: action === 'approve' ? 'APPROVED' : 'REJECTED' 
         }),
       })
 
       if (response.ok) {
+        const updatedBooking = await response.json()
+        
+        // 更新本地狀態，移除已處理的預約
+        setBookings(prevBookings => 
+          prevBookings.filter(booking => booking.id !== bookingId)
+        )
+        
         toast({
-          title: `預約已${status === 'APPROVED' ? '核准' : '拒絕'}`,
-          description: '使用者將收到郵件通知',
-        })
-        
-        // 從列表中移除已處理的預約
-        setBookings(prev => prev.filter(b => b.id !== bookingId))
-        
-        // 清除備註
-        setAdminNotes(prev => {
-          const newNotes = { ...prev }
-          delete newNotes[bookingId]
-          return newNotes
+          title: "成功",
+          description: `預約已${action === 'approve' ? '核准' : '拒絕'}`,
         })
       } else {
-        const error = await response.json()
-        throw new Error(error.error)
+        throw new Error('操作失敗')
       }
     } catch (error) {
-      console.error('處理預約失敗:', error)
       toast({
-        title: '處理失敗',
-        description: error instanceof Error ? error.message : '發生未知錯誤',
-        variant: 'destructive',
+        title: "錯誤",
+        description: "操作失敗，請重試",
+        variant: "destructive",
       })
     } finally {
-      setProcessingId(null)
+      setLoading(null)
     }
   }
 
-  if (loading) {
-    return <div className="text-center py-8">載入中...</div>
+  const formatDateTime = (date: Date) => {
+    return new Date(date).toLocaleString('zh-TW', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
   }
 
-  if (bookings.length === 0) {
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'PENDING':
+        return <Badge variant="secondary">待審核</Badge>
+      case 'APPROVED':
+        return <Badge variant="default">已核准</Badge>
+      case 'REJECTED':
+        return <Badge variant="destructive">已拒絕</Badge>
+      default:
+        return <Badge variant="outline">{status}</Badge>
+    }
+  }
+
+  if (!bookings || bookings.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
-        目前沒有待審核的預約申請
+        目前沒有待審核的預約
       </div>
     )
   }
 
   return (
     <div className="space-y-4">
-      {bookings.map((booking) => (
-        <Card key={booking.id} className="border-l-4 border-l-orange-400">
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  {booking.equipment.name}
+      {bookings.map((booking) => {
+        const userName = booking.user?.name || booking.user?.email || booking.guestName || '未知使用者'
+        const equipmentName = booking.equipment?.name || '未知設備'
+        
+        return (
+          <Card key={booking.id}>
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <CardTitle className="text-lg">
+                  設備預約申請
                 </CardTitle>
-                <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <User className="h-4 w-4" />
-                    {booking.user.name || booking.user.email}
-                  </div>
-                  {booking.equipment.location && (
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      {booking.equipment.location}
-                    </div>
+                {getStatusBadge(booking.status)}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600">申請人</p>
+                  <p className="font-medium">
+                    {userName}
+                    {booking.guestName && ' (訪客)'}
+                  </p>
+                  {booking.guestEmail && (
+                    <p className="text-sm text-gray-500">{booking.guestEmail}</p>
                   )}
                 </div>
-              </div>
-              <Badge variant="secondary">
-                {formatDateTime(booking.createdAt)}
-              </Badge>
-            </div>
-          </CardHeader>
-          
-          <CardContent className="space-y-4">
-            {/* 預約資訊 */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
                 <div>
-                  <h4 className="font-medium text-gray-900">使用時間</h4>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600">設備</p>
+                  <p className="font-medium">{equipmentName}</p>
+                  {booking.equipment?.location && (
+                    <p className="text-sm text-gray-500">{booking.equipment.location}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <p className="text-sm text-gray-600">使用時間</p>
+                  <p className="font-medium">
                     {formatDateTime(booking.startTime)} - {formatDateTime(booking.endTime)}
                   </p>
                 </div>
+                
                 <div>
-                  <h4 className="font-medium text-gray-900">申請人資訊</h4>
-                  <p className="text-sm text-gray-600">
-                    {booking.user.email}
-                    {booking.user.department && ` (${booking.user.department})`}
-                  </p>
+                  <p className="text-sm text-gray-600">申請時間</p>
+                  <p className="font-medium">{formatDateTime(booking.createdAt)}</p>
                 </div>
+                
+                <div className="col-span-2">
+                  <p className="text-sm text-gray-600">使用目的</p>
+                  <p className="font-medium">{booking.purpose}</p>
+                </div>
+                
+                {/* 顯示審核資訊 */}
+                {(booking.status === 'APPROVED' || booking.status === 'REJECTED') && (
+                  <div className="col-span-2">
+                    <p className="text-sm text-gray-600">
+                      {booking.status === 'APPROVED' ? '核准時間' : '拒絕時間'}
+                    </p>
+                    <p className="font-medium">{formatDateTime(booking.updatedAt)}</p>
+                    {booking.status === 'REJECTED' && booking.rejectionReason && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-600">拒絕原因</p>
+                        <p className="text-sm text-red-600">{booking.rejectionReason}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               
-              <div className="mt-4">
-                <h4 className="font-medium text-gray-900">單位/所屬PI</h4>
-                <p className="text-sm text-gray-600 mt-1">
-                  {booking.purpose}
-                </p>
-              </div>
-            </div>
-
-            {/* 管理員備註 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                管理員備註 (選填)
-              </label>
-              <Textarea
-                placeholder="請輸入審核備註..."
-                value={adminNotes[booking.id] || ''}
-                onChange={(e) => setAdminNotes(prev => ({
-                  ...prev,
-                  [booking.id]: e.target.value
-                }))}
-                rows={2}
-              />
-            </div>
-
-            {/* 操作按鈕 */}
-            <div className="flex gap-2 pt-4">
-              <Button
-                onClick={() => handleApproval(booking.id, 'APPROVED')}
-                disabled={processingId === booking.id}
-                className="flex items-center gap-2"
-              >
-                <Check className="h-4 w-4" />
-                核准
-              </Button>
-              
-              <Button
-                variant="destructive"
-                onClick={() => handleApproval(booking.id, 'REJECTED')}
-                disabled={processingId === booking.id}
-                className="flex items-center gap-2"
-              >
-                <X className="h-4 w-4" />
-                拒絕
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+              {showActions && booking.status === 'PENDING' && (
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    variant="default"
+                    onClick={() => handleApproval(booking.id, 'approve')}
+                    disabled={loading === booking.id}
+                  >
+                    {loading === booking.id ? '處理中...' : '核准'}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => handleApproval(booking.id, 'reject')}
+                    disabled={loading === booking.id}
+                  >
+                    {loading === booking.id ? '處理中...' : '拒絕'}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )
+      })}
     </div>
   )
 }

@@ -122,18 +122,18 @@ model Booking {
   updatedAt DateTime @updatedAt
 }
 
-// PostgreSQL 支援原生 enum
+// PostgreSQL Enum 定義
 enum Role {
   USER
   ADMIN
 }
 
 enum EquipmentStatus {
-  AVAILABLE    // 開放預約
-  ASK_ADMIN    // 請詢問管理員  
-  PREPARING    // 籌備中
-  MAINTENANCE  // 維護中
-  UNAVAILABLE  // 停用
+  AVAILABLE
+  ASK_ADMIN
+  PREPARING
+  MAINTENANCE
+  UNAVAILABLE
 }
 
 enum BookingStatus {

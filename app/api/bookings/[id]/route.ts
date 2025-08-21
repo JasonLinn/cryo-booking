@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
-// import { authOptions } from '@/lib/auth'
+import { authOptions } from '@/lib/auth'
 import { sendEmail, generateBookingApprovalEmail, generateBookingRejectionEmail } from '@/lib/email'
 
 export async function PATCH(
@@ -9,15 +9,14 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    // const session = await getServerSession(authOptions)
-    const session = null // 暫時禁用認證
+    const session = await getServerSession(authOptions)
     
-    // if (!session || session.user.role !== 'ADMIN') {
-    //   return NextResponse.json(
-    //     { error: '權限不足' },
-    //     { status: 403 }
-    //   )
-    // }
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: '權限不足' },
+        { status: 403 }
+      )
+    }
 
     const data = await request.json()
     const { status, adminNotes } = data
