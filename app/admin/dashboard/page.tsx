@@ -45,6 +45,15 @@ export default async function AdminDashboard() {
     take: 10 // 只顯示最近 10 個
   })
 
+  // 獲取所有預約（用於「全部」標籤）
+  const allBookings = await prisma.booking.findMany({
+    include: {
+      user: true,
+      equipment: true,
+    },
+    orderBy: { createdAt: 'desc' }
+  })
+
   // 計算統計資訊
   const totalBookings = await prisma.booking.count()
   const pendingCount = pendingBookings.length
@@ -82,9 +91,11 @@ export default async function AdminDashboard() {
             pendingBookings={pendingBookings}
             approvedBookings={approvedBookings}
             rejectedBookings={rejectedBookings}
+            allBookings={allBookings}
             pendingCount={pendingCount}
             approvedCount={approvedCount}
             rejectedCount={rejectedCount}
+            totalBookings={totalBookings}
           />
         </div>
       </div>
