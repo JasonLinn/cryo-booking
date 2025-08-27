@@ -428,12 +428,17 @@ export default function EquipmentManagement() {
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>確認刪除</AlertDialogTitle>
+                      <AlertDialogTitle>確認刪除設備</AlertDialogTitle>
                       <AlertDialogDescription>
-                        確定要刪除設備「{eq.name}」嗎？
+                        確定要<strong>永久刪除</strong>設備「{eq.name}」嗎？
                         {eq._count && eq._count.bookings > 0 && (
-                          <span className="text-orange-600">
-                            <br />此設備有 {eq._count.bookings} 個相關預約，刪除後設備將被停用而非完全移除。
+                          <span className="text-red-600">
+                            <br /><strong>警告：</strong>此設備有 {eq._count.bookings} 個相關預約，刪除設備後這些預約也會一併被刪除且無法復原。
+                          </span>
+                        )}
+                        {!eq._count || eq._count.bookings === 0 && (
+                          <span className="text-gray-600">
+                            <br />此操作無法復原，設備將被永久移除。
                           </span>
                         )}
                       </AlertDialogDescription>
