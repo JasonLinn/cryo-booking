@@ -4,6 +4,11 @@ import { Suspense } from 'react'
 import { Calendar } from '@/components/calendar'
 import { Navbar } from '@/components/navbar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { PrismaClient } from '@prisma/client'
+import { getEquipmentStatusConfig } from '@/lib/equipment-status'
+
+const prisma = new PrismaClient()
 
 export default async function HomePage() {
   // const session = await getServerSession(authOptions)
@@ -90,33 +95,73 @@ export default async function HomePage() {
 }
 
 async function EquipmentStatus() {
-  // 這裡可以加入設備狀態的資料
-  return (
-    <div className="space-y-2 lg:space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-xs lg:text-sm">低溫恆溫器 A</span>
-        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-          可用
-        </span>
+  try {
+    // 從資料庫獲取所有設備
+    const equipment = await prisma.equipment.findMany({
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        color: true,
+        _count: {
+          select: {
+            bookings: {
+              where: {
+                status: 'APPROVED',
+                startTime: { lte: new Date() },
+                endTime: { gte: new Date() }
+              }
+            }
+          }
+        }
+      },
+      orderBy: { name: 'asc' }
+    })
+
+    return (
+      <div className="space-y-2 lg:space-y-3">
+        {equipment.length === 0 ? (
+          <div className="text-center py-4 text-gray-500 text-sm">
+            目前沒有設備資料
+          </div>
+        ) : (
+          equipment.map((eq) => {
+            const statusConfig = getEquipmentStatusConfig(eq.status)
+            const isInUse = eq._count.bookings > 0
+            
+            // 如果設備目前有進行中的預約，顯示為使用中
+            const displayStatus = isInUse ? {
+              label: '使用中',
+              color: 'bg-yellow-100 text-yellow-800'
+            } : statusConfig
+
+            return (
+              <div key={eq.id} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: eq.color || '#9CA3AF' }}
+                  ></div>
+                  <span className="text-xs lg:text-sm">{eq.name}</span>
+                </div>
+                <Badge 
+                  variant="outline"
+                  className={`text-xs px-2 py-1 ${displayStatus.color}`}
+                >
+                  {displayStatus.label}
+                </Badge>
+              </div>
+            )
+          })
+        )}
       </div>
-      <div className="flex items-center justify-between">
-        <span className="text-xs lg:text-sm">低溫恆溫器 B</span>
-        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-          可用
-        </span>
+    )
+  } catch (error) {
+    console.error('獲取設備狀態失敗:', error)
+    return (
+      <div className="text-center py-4 text-red-500 text-sm">
+        載入設備狀態失敗
       </div>
-      <div className="flex items-center justify-between">
-        <span className="text-xs lg:text-sm">稀釋致冷機</span>
-        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-          使用中
-        </span>
-      </div>
-      <div className="flex items-center justify-between">
-        <span className="text-xs lg:text-sm">氦氣回收系統</span>
-        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-          可用
-        </span>
-      </div>
-    </div>
-  )
+    )
+  }
 }
