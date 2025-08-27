@@ -113,13 +113,26 @@ async function EquipmentStatus() {
               }
             }
           }
+        },
+        bookings: {
+          where: {
+            status: 'APPROVED',
+            startTime: { lte: new Date() },
+            endTime: { gte: new Date() }
+          },
+          select: {
+            endTime: true,
+            user: { select: { name: true } },
+            guestName: true
+          },
+          take: 1
         }
       },
       orderBy: { name: 'asc' }
     })
 
     return (
-      <div className="space-y-2 lg:space-y-3">
+      <div className="space-y-3">
         {equipment.length === 0 ? (
           <div className="text-center py-4 text-gray-500 text-sm">
             目前沒有設備資料
@@ -128,6 +141,7 @@ async function EquipmentStatus() {
           equipment.map((eq) => {
             const statusConfig = getEquipmentStatusConfig(eq.status)
             const isInUse = eq._count.bookings > 0
+            const currentBooking = eq.bookings[0]
             
             // 如果設備目前有進行中的預約，顯示為使用中
             const displayStatus = isInUse ? {
@@ -136,24 +150,50 @@ async function EquipmentStatus() {
             } : statusConfig
 
             return (
-              <div key={eq.id} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: eq.color || '#9CA3AF' }}
-                  ></div>
-                  <span className="text-xs lg:text-sm">{eq.name}</span>
+              <div key={eq.id} className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: eq.color || '#9CA3AF' }}
+                    ></div>
+                    <span className="text-xs lg:text-sm font-medium">{eq.name}</span>
+                  </div>
+                  <Badge 
+                    variant="outline"
+                    className={`text-xs px-2 py-1 ${displayStatus.color}`}
+                  >
+                    {displayStatus.label}
+                  </Badge>
                 </div>
-                <Badge 
-                  variant="outline"
-                  className={`text-xs px-2 py-1 ${displayStatus.color}`}
-                >
-                  {displayStatus.label}
-                </Badge>
+                
+                {/* 如果設備正在使用中，顯示使用者和結束時間 */}
+                {isInUse && currentBooking && (
+                  <div className="ml-4 text-xs text-gray-500">
+                    使用者：{currentBooking.user?.name || currentBooking.guestName || '未知'}
+                    <br />
+                    預計結束：{new Date(currentBooking.endTime).toLocaleString('zh-TW', {
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                )}
               </div>
             )
           })
         )}
+        
+        {/* 資料更新時間 */}
+        <div className="text-xs text-gray-400 text-center pt-2 border-t">
+          更新時間：{new Date().toLocaleString('zh-TW', {
+            month: '2-digit',
+            day: '2-digit', 
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
+        </div>
       </div>
     )
   } catch (error) {
