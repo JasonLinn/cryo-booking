@@ -91,7 +91,7 @@ export function AdminDashboardClient({
               已經核准的預約申請，按核准時間排序
             </p>
           </div>
-          <BookingApprovalList bookings={approvedBookings} showActions={false} />
+          <BookingApprovalList bookings={approvedBookings} showActions={true} />
         </TabsContent>
 
         <TabsContent value="rejected" className="mt-0">
@@ -103,7 +103,7 @@ export function AdminDashboardClient({
               已經拒絕的預約申請，包含拒絕原因
             </p>
           </div>
-          <BookingApprovalList bookings={rejectedBookings} showActions={false} />
+          <BookingApprovalList bookings={rejectedBookings} showActions={true} />
         </TabsContent>
 
         <TabsContent value="all" className="mt-0">
@@ -115,7 +115,7 @@ export function AdminDashboardClient({
               系統中的全部預約，按建立時間排序
             </p>
           </div>
-          <BookingApprovalList bookings={allBookings} showActions={false} />
+          <BookingApprovalList bookings={allBookings} showActions={true} />
         </TabsContent>
       </Tabs>
     </div>

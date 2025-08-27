@@ -82,3 +82,51 @@ export async function PATCH(
     )
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: '權限不足' },
+        { status: 403 }
+      )
+    }
+
+    // 檢查預約是否存在
+    const existingBooking = await prisma.booking.findUnique({
+      where: { id: params.id },
+      include: {
+        user: true,
+        equipment: true
+      }
+    })
+
+    if (!existingBooking) {
+      return NextResponse.json(
+        { error: '預約不存在' },
+        { status: 404 }
+      )
+    }
+
+    // 刪除預約
+    await prisma.booking.delete({
+      where: { id: params.id }
+    })
+
+    return NextResponse.json(
+      { message: '預約已成功刪除' },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error('刪除預約失敗:', error)
+    return NextResponse.json(
+      { error: '刪除預約失敗' },
+      { status: 500 }
+    )
+  }
+}

@@ -96,14 +96,22 @@ export function Calendar() {
   const [showBookingDialog, setShowBookingDialog] = useState(false)
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [showBookingDetails, setShowBookingDetails] = useState(false)
+  const [isLoadingEquipment, setIsLoadingEquipment] = useState(true)
+  const [isLoadingBookings, setIsLoadingBookings] = useState(true)
 
+  // 只在初始載入時取得設備列表
   useEffect(() => {
     fetchEquipment()
+  }, [])
+
+  // 當日期或視圖改變時重新取得預約
+  useEffect(() => {
     fetchBookings()
   }, [currentDate, viewType])
 
   const fetchEquipment = async () => {
     try {
+      setIsLoadingEquipment(true)
       const response = await fetch('/api/equipment')
       if (response.ok) {
         const data = await response.json()
@@ -111,11 +119,14 @@ export function Calendar() {
       }
     } catch (error) {
       console.error('取得設備列表失敗:', error)
+    } finally {
+      setIsLoadingEquipment(false)
     }
   }
 
   const fetchBookings = async () => {
     try {
+      setIsLoadingBookings(true)
       // 獲取所有預約（包含所有狀態），讓使用者能看到完整的預約情況
       const response = await fetch('/api/bookings?public=true&status=all')
       if (response.ok) {
@@ -129,6 +140,8 @@ export function Calendar() {
       }
     } catch (error) {
       console.error('取得預約列表失敗:', error)
+    } finally {
+      setIsLoadingBookings(false)
     }
   }
 
@@ -289,20 +302,27 @@ export function Calendar() {
         <div className="text-xs lg:text-sm font-medium text-gray-700 mb-2 lg:mb-0 lg:inline">設備圖例：</div>
         
         {/* 設備圖例 */}
-        <div className="flex flex-wrap gap-2 lg:gap-4 mb-2 lg:mb-0 lg:inline-flex lg:ml-2">
-          {equipment.map((eq) => (
-            <div key={eq.id} className="flex items-center gap-1 lg:gap-2">
-              <div 
-                className="w-2.5 h-2.5 lg:w-3 lg:h-3 rounded-full border"
-                style={{ 
-                  backgroundColor: eq.color || '#9CA3AF',
-                  borderColor: eq.color ? hexToRgba(eq.color, 0.3) : '#D1D5DB'
-                }}
-              ></div>
-              <span className="text-xs lg:text-sm text-gray-700">{eq.name}</span>
-            </div>
-          ))}
-        </div>
+        {isLoadingEquipment ? (
+          <div className="flex items-center gap-2 lg:ml-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+            <span className="text-xs lg:text-sm text-gray-500">載入設備資料中...</span>
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-2 lg:gap-4 mb-2 lg:mb-0 lg:inline-flex lg:ml-2">
+            {equipment.map((eq) => (
+              <div key={eq.id} className="flex items-center gap-1 lg:gap-2">
+                <div 
+                  className="w-2.5 h-2.5 lg:w-3 lg:h-3 rounded-full border"
+                  style={{ 
+                    backgroundColor: eq.color || '#9CA3AF',
+                    borderColor: eq.color ? hexToRgba(eq.color, 0.3) : '#D1D5DB'
+                  }}
+                ></div>
+                <span className="text-xs lg:text-sm text-gray-700">{eq.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
         
         {/* 狀態圖例 */}
         <div className="flex flex-wrap items-center gap-2 lg:gap-4 text-xs text-gray-600 lg:ml-4 lg:inline-flex">
@@ -319,20 +339,28 @@ export function Calendar() {
       </div>
 
       {/* 日曆網格 */}
-      <div className={`grid gap-0.5 lg:gap-1 ${viewType === 'day' ? 'grid-cols-1' : 'grid-cols-7'}`}>
-        {/* 星期標頭 - 只在月視圖和週視圖顯示 */}
-        {viewType !== 'day' && ['日', '一', '二', '三', '四', '五', '六'].map((day) => (
-          <div key={day} className="p-1 lg:p-2 text-center font-medium text-gray-500 text-xs lg:text-sm">
-            {day}
+      {isLoadingBookings ? (
+        <div className="flex items-center justify-center py-16 lg:py-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 lg:h-12 lg:w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-sm lg:text-base text-gray-500">載入預約資料中...</p>
           </div>
-        ))}
+        </div>
+      ) : (
+        <div className={`grid gap-0.5 lg:gap-1 ${viewType === 'day' ? 'grid-cols-1' : 'grid-cols-7'}`}>
+          {/* 星期標頭 - 只在月視圖和週視圖顯示 */}
+          {viewType !== 'day' && ['日', '一', '二', '三', '四', '五', '六'].map((day) => (
+            <div key={day} className="p-1 lg:p-2 text-center font-medium text-gray-500 text-xs lg:text-sm">
+              {day}
+            </div>
+          ))}
 
-        {/* 日期網格 */}
-        {daysInView.map((date) => {
-          const dayBookings = getBookingsForDate(date)
-          const isSelected = selectedDate && isSameDay(date, selectedDate)
-          const isCurrentMonth = viewType === 'month' ? isSameMonth(date, currentDate) : true
-          const isNotAvailable = !isBookingAvailable(date)
+          {/* 日期網格 */}
+          {daysInView.map((date) => {
+            const dayBookings = getBookingsForDate(date)
+            const isSelected = selectedDate && isSameDay(date, selectedDate)
+            const isCurrentMonth = viewType === 'month' ? isSameMonth(date, currentDate) : true
+            const isNotAvailable = !isBookingAvailable(date)
 
           return (
             <div
@@ -450,7 +478,8 @@ export function Calendar() {
             </div>
           )
         })}
-      </div>
+        </div>
+      )}
 
       {/* 設備選擇對話框 */}
       {showEquipmentSelect && selectedDate && (

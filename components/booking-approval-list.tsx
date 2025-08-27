@@ -64,6 +64,42 @@ export default function BookingApprovalList({
     }
   }
 
+  const handleDelete = async (bookingId: string) => {
+    if (!confirm('確定要刪除這個預約嗎？此操作無法復原。')) {
+      return
+    }
+
+    setLoading(bookingId)
+    try {
+      const response = await fetch(`/api/bookings/${bookingId}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        // 從本地狀態中移除已刪除的預約
+        setBookings(prevBookings => 
+          prevBookings.filter(booking => booking.id !== bookingId)
+        )
+        
+        toast({
+          title: "成功",
+          description: "預約已刪除",
+        })
+      } else {
+        const errorData = await response.json()
+        throw new Error(errorData.error || '刪除失敗')
+      }
+    } catch (error) {
+      toast({
+        title: "錯誤",
+        description: error instanceof Error ? error.message : "刪除失敗，請重試",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(null)
+    }
+  }
+
   const formatDateTime = (date: Date) => {
     return new Date(date).toLocaleString('zh-TW', {
       year: 'numeric',
@@ -166,21 +202,33 @@ export default function BookingApprovalList({
                 )}
               </div>
               
-              {showActions && booking.status === 'PENDING' && (
+              {showActions && (
                 <div className="flex gap-2 mt-4">
+                  {booking.status === 'PENDING' && (
+                    <>
+                      <Button
+                        variant="default"
+                        onClick={() => handleApproval(booking.id, 'approve')}
+                        disabled={loading === booking.id}
+                      >
+                        {loading === booking.id ? '處理中...' : '核准'}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleApproval(booking.id, 'reject')}
+                        disabled={loading === booking.id}
+                      >
+                        {loading === booking.id ? '處理中...' : '拒絕'}
+                      </Button>
+                    </>
+                  )}
                   <Button
-                    variant="default"
-                    onClick={() => handleApproval(booking.id, 'approve')}
+                    variant="outline"
+                    onClick={() => handleDelete(booking.id)}
                     disabled={loading === booking.id}
+                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
                   >
-                    {loading === booking.id ? '處理中...' : '核准'}
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => handleApproval(booking.id, 'reject')}
-                    disabled={loading === booking.id}
-                  >
-                    {loading === booking.id ? '處理中...' : '拒絕'}
+                    {loading === booking.id ? '刪除中...' : '刪除'}
                   </Button>
                 </div>
               )}
