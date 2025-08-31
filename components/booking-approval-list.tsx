@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Booking, User, Equipment } from '@prisma/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -15,17 +15,26 @@ type BookingWithRelations = Booking & {
 interface BookingApprovalListProps {
   bookings: BookingWithRelations[]
   showActions?: boolean
+  onBookingUpdate?: () => Promise<void>
+  isRefreshing?: boolean
 }
 
 export default function BookingApprovalList({ 
   bookings: initialBookings, 
-  showActions = true 
+  showActions = true,
+  onBookingUpdate,
+  isRefreshing = false
 }: BookingApprovalListProps) {
   const [bookings, setBookings] = useState<BookingWithRelations[]>(initialBookings)
   const [loading, setLoading] = useState<string | null>(null)
   const { toast } = useToast()
 
-  const handleApproval = async (bookingId: string, action: 'approve' | 'reject') => {
+  // 當 props 中的 bookings 改變時，同步本地狀態
+  useEffect(() => {
+    setBookings(initialBookings)
+  }, [initialBookings])
+
+  const handleApproval = async (bookingId: string, action: 'approve' | 'reject', reason?: string) => {
     setLoading(bookingId)
     try {
       const response = await fetch(`/api/bookings/${bookingId}`, {
@@ -34,14 +43,13 @@ export default function BookingApprovalList({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          status: action === 'approve' ? 'APPROVED' : 'REJECTED' 
+          status: action === 'approve' ? 'APPROVED' : 'REJECTED',
+          adminNotes: reason 
         }),
       })
 
       if (response.ok) {
-        const updatedBooking = await response.json()
-        
-        // 更新本地狀態，移除已處理的預約
+        // 樂觀更新：立即從本地狀態移除已處理的預約
         setBookings(prevBookings => 
           prevBookings.filter(booking => booking.id !== bookingId)
         )
@@ -50,6 +58,11 @@ export default function BookingApprovalList({
           title: "成功",
           description: `預約已${action === 'approve' ? '核准' : '拒絕'}`,
         })
+
+        // 如果有提供 onBookingUpdate 回調，則執行它來重新整理資料
+        if (onBookingUpdate) {
+          await onBookingUpdate()
+        }
       } else {
         throw new Error('操作失敗')
       }
@@ -76,7 +89,6 @@ export default function BookingApprovalList({
       })
 
       if (response.ok) {
-        // 從本地狀態中移除已刪除的預約
         setBookings(prevBookings => 
           prevBookings.filter(booking => booking.id !== bookingId)
         )
@@ -85,6 +97,10 @@ export default function BookingApprovalList({
           title: "成功",
           description: "預約已刪除",
         })
+
+        if (onBookingUpdate) {
+          await onBookingUpdate()
+        }
       } else {
         const errorData = await response.json()
         throw new Error(errorData.error || '刪除失敗')
@@ -126,7 +142,7 @@ export default function BookingApprovalList({
   if (!bookings || bookings.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
-        目前沒有待審核的預約
+        目前沒有預約
       </div>
     )
   }
@@ -134,7 +150,7 @@ export default function BookingApprovalList({
   return (
     <div className="space-y-4">
       {bookings.map((booking) => {
-        const userName = booking.user?.name || booking.user?.email || booking.guestName || '未知使用者'
+        const userName = booking.user?.name || booking.user?.email || '未知使用者'
         const equipmentName = booking.equipment?.name || '未知設備'
         
         return (
@@ -153,10 +169,9 @@ export default function BookingApprovalList({
                   <p className="text-sm text-gray-600">申請人</p>
                   <p className="font-medium">
                     {userName}
-                    {booking.guestName && ' (訪客)'}
                   </p>
-                  {booking.guestEmail && (
-                    <p className="text-sm text-gray-500">{booking.guestEmail}</p>
+                  {booking.user?.email && (
+                    <p className="text-sm text-gray-500">{booking.user.email}</p>
                   )}
                 </div>
                 
@@ -209,26 +224,49 @@ export default function BookingApprovalList({
                       <Button
                         variant="default"
                         onClick={() => handleApproval(booking.id, 'approve')}
-                        disabled={loading === booking.id}
+                        disabled={loading === booking.id || isRefreshing}
+                        className="relative"
                       >
-                        {loading === booking.id ? '處理中...' : '核准'}
+                        {loading === booking.id ? (
+                          <div className="flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            核准中...
+                          </div>
+                        ) : (
+                          '核准'
+                        )}
                       </Button>
                       <Button
                         variant="destructive"
                         onClick={() => handleApproval(booking.id, 'reject')}
-                        disabled={loading === booking.id}
+                        disabled={loading === booking.id || isRefreshing}
+                        className="relative"
                       >
-                        {loading === booking.id ? '處理中...' : '拒絕'}
+                        {loading === booking.id ? (
+                          <div className="flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            拒絕中...
+                          </div>
+                        ) : (
+                          '拒絕'
+                        )}
                       </Button>
                     </>
                   )}
                   <Button
                     variant="outline"
                     onClick={() => handleDelete(booking.id)}
-                    disabled={loading === booking.id}
-                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                    disabled={loading === booking.id || isRefreshing}
+                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 relative"
                   >
-                    {loading === booking.id ? '刪除中...' : '刪除'}
+                    {loading === booking.id ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                        刪除中...
+                      </div>
+                    ) : (
+                      '刪除'
+                    )}
                   </Button>
                 </div>
               )}
