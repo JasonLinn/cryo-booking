@@ -55,9 +55,14 @@ DATABASE_URL="postgresql://..."
 NEXTAUTH_SECRET="your-production-secret"
 NEXTAUTH_URL="https://your-app.vercel.app"
 
-# 電子郵件設定
-RESEND_API_KEY="your-resend-key"
-FROM_EMAIL="noreply@your-domain.com"
+# 電子郵件設定 - Gmail SMTP
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_SECURE="false"
+SMTP_USER="your-email@gmail.com"
+SMTP_PASS="your-app-password"
+FROM_EMAIL="your-email@gmail.com"
+FROM_NAME="CRYO-預約系統"
 
 # 管理員設定
 ADMIN_EMAIL="admin@your-domain.com"

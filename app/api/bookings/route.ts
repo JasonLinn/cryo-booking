@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { sendEmail, generateBookingApprovalEmail, generateBookingRejectionEmail } from '@/lib/email'
+import { 
+  sendEmail, 
+  generateBookingApprovalEmail, 
+  generateBookingRejectionEmail,
+  generateBookingRequestEmail,
+  generateAdminNotificationEmail
+} from '@/lib/email'
 import { isBookingAvailable } from '@/lib/utils'
 import { canBookEquipment } from '@/lib/equipment-status'
 
@@ -199,6 +205,47 @@ export async function POST(request: NextRequest) {
         user: true
       }
     })
+
+    // 發送郵件通知
+    try {
+      const userEmail = session?.user?.email || guestEmail
+      const userName = session?.user?.name || guestName || 'User'
+
+      if (userEmail) {
+        // 1. 發送確認郵件給申請人
+        await sendEmail({
+          to: userEmail,
+          subject: '預約申請已送出',
+          html: generateBookingRequestEmail(
+            userName,
+            booking.equipment.name,
+            booking.startTime,
+            booking.endTime,
+            booking.purpose
+          )
+        })
+
+        // 2. 發送通知郵件給管理員
+        const adminEmail = process.env.ADMIN_EMAIL
+        if (adminEmail) {
+          await sendEmail({
+            to: adminEmail,
+            subject: '新預約申請通知',
+            html: generateAdminNotificationEmail(
+              userName,
+              userEmail,
+              booking.equipment.name,
+              booking.startTime,
+              booking.endTime,
+              booking.purpose
+            )
+          })
+        }
+      }
+    } catch (emailError) {
+      console.error('郵件發送失敗:', emailError)
+      // 即使郵件發送失敗，也不影響預約建立
+    }
 
     return NextResponse.json(booking)
   } catch (error) {

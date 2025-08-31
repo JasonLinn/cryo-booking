@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { sendEmail, generateBookingApprovalEmail, generateBookingRejectionEmail } from '@/lib/email'
+import { 
+  sendEmail, 
+  generateBookingApprovalEmail, 
+  generateBookingRejectionEmail
+} from '@/lib/email'
 
 export async function PATCH(
   request: NextRequest,
@@ -43,8 +47,8 @@ export async function PATCH(
 
     // 發送郵件通知
     try {
-      const recipientName = booking.user?.name || booking.guestName || 'User'
-      const recipientEmail = booking.user?.email || booking.guestEmail
+      const recipientName = booking.user?.name || 'User'
+      const recipientEmail = booking.user?.email
       
       if (recipientEmail) {
         const emailTemplate = status === 'APPROVED' 
@@ -67,6 +71,26 @@ export async function PATCH(
           subject: status === 'APPROVED' ? '預約已核准' : '預約已拒絕',
           html: emailTemplate
         })
+
+        // 同時通知管理員審核結果（副本）
+        const adminEmail = process.env.ADMIN_EMAIL
+        if (adminEmail && adminEmail !== recipientEmail) {
+          await sendEmail({
+            to: adminEmail,
+            subject: `預約審核完成 - ${status === 'APPROVED' ? '已核准' : '已拒絕'}`,
+            html: `
+              <p>管理員您好，</p>
+              <p>預約審核已完成：</p>
+              <ul>
+                <li>申請人：${recipientName} (${recipientEmail})</li>
+                <li>設備：${booking.equipment.name}</li>
+                <li>時間：${booking.startTime.toLocaleString('zh-TW')} - ${booking.endTime.toLocaleString('zh-TW')}</li>
+                <li>審核結果：${status === 'APPROVED' ? '核准' : '拒絕'}</li>
+                ${adminNotes ? `<li>備註：${adminNotes}</li>` : ''}
+              </ul>
+            `
+          })
+        }
       }
     } catch (emailError) {
       console.error('郵件發送失敗:', emailError)
