@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
-import { EQUIPMENT_STATUS_CONFIG, getEquipmentStatusConfig, type EquipmentStatus } from '@/lib/equipment-status'
+import { EQUIPMENT_STATUS_CONFIG, getEquipmentStatusConfig, getStatusBadgeClass, type EquipmentStatus } from '@/lib/equipment-status'
 
 interface Equipment {
   id: string
@@ -114,12 +114,8 @@ export function EquipmentSelectDialog({
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-medium text-gray-900 text-sm lg:text-base truncate">{eq.name}</h3>
                         <Badge 
-                          variant={
-                            eq.status === 'AVAILABLE' ? 'default' : 
-                            eq.status === 'ASK_ADMIN' ? 'secondary' : 
-                            'destructive'
-                          }
-                          className="text-xs shrink-0"
+                          variant="outline"
+                          className={`text-xs shrink-0 ${getStatusBadgeClass(eq.status)}`}
                         >
                           {statusConfig.label}
                         </Badge>
