@@ -217,11 +217,11 @@ function EditEquipmentDialog({ equipment, open, onOpenChange, onSave }: EditEqui
               onChange={(e) => setFormData({ ...formData, status: e.target.value as EquipmentStatus })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="AVAILABLE">可預約</option>
+              <option value="AVAILABLE">開放預約</option>
               <option value="ASK_ADMIN">請詢問管理員</option>
               <option value="PREPARING">籌備中</option>
               <option value="MAINTENANCE">維護中</option>
-              <option value="UNAVAILABLE">不可預約</option>
+              <option value="UNAVAILABLE">停用</option>
             </select>
           </div>
         </div>
@@ -382,14 +382,10 @@ export default function EquipmentManagement() {
                 </div>
                 <div className="flex items-center gap-1">
                   <Badge 
-                    variant={eq.status === 'AVAILABLE' ? 'default' : 
-                            eq.status === 'ASK_ADMIN' ? 'secondary' : 'destructive'}
+                    variant="outline"
+                    className={getStatusBadgeClass(eq.status)}
                   >
-                    {eq.status === 'AVAILABLE' ? '可預約' :
-                     eq.status === 'ASK_ADMIN' ? '請詢問管理員' :
-                     eq.status === 'PREPARING' ? '籌備中' :
-                     eq.status === 'MAINTENANCE' ? '維護中' :
-                     '不可預約'}
+                    {getStatusLabel(eq.status)}
                   </Badge>
                 </div>
               </div>
