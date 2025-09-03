@@ -122,7 +122,7 @@ export function Navbar() {
               </DropdownMenu>
             ) : (
               <Button asChild>
-                <Link href="/auth/signin">登入</Link>
+                <Link href="/auth/signin">管理員登入</Link>
               </Button>
             )}
           </div>

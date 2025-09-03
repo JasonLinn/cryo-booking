@@ -90,15 +90,8 @@ export default function SignInPage() {
           </form>
 
           {/* 預設帳號說明 */}
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
-            <div className="font-semibold mb-2">預設測試帳號：</div>
-            <div className="space-y-1">
-              <div><strong>管理員：</strong> admin@example.com / admin123</div>
-              <div><strong>一般使用者：</strong> user@example.com / user123</div>
-            </div>
-          </div>
 
-          <div className="relative">
+          {/* <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
@@ -113,7 +106,7 @@ export default function SignInPage() {
             onClick={handleGoogleSignIn}
           >
             使用 Google 登入
-          </Button>
+          </Button> */}
         </CardContent>
       </Card>
     </div>
