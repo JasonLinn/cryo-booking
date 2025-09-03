@@ -31,7 +31,7 @@ export async function sendEmail({ to, subject, html, cc }: EmailTemplate) {
     
     const mailOptions = {
       from: {
-        name: process.env.FROM_NAME || 'CRYO-預約系統',
+        name: process.env.FROM_NAME || 'ASVET-預約系統',
         address: process.env.FROM_EMAIL || process.env.SMTP_USER,
       },
       to,
