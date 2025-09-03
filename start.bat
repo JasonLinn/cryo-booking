@@ -1,5 +1,5 @@
 @echo off
-echo TissueCryoEM core預約系統 - 快速啟動
+echo ASVET預約系統 - 快速啟動
 echo ========================================
 echo.
 

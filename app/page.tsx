@@ -21,7 +21,7 @@ export default async function HomePage() {
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
-            TissueCryoEM core預約系統
+            ASVET預約系統
           </h1>
           <p className="text-gray-600 mt-2">
             {session 

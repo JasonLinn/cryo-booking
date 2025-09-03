@@ -47,7 +47,7 @@ export default function SignInPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">
-            TissueCryoEM core預約系統
+            ASVET預約系統
           </CardTitle>
           <CardDescription>
             請登入以使用預約服務

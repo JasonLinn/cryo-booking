@@ -163,7 +163,7 @@ export function BookingDialog({
             <Label htmlFor="purpose" className="text-sm lg:text-base">單位/所屬PI</Label>
             <Textarea
               id="purpose"
-              placeholder="請說明使用設備的目的和實驗內容..."
+              placeholder=""
               value={purpose}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPurpose(e.target.value)}
               required

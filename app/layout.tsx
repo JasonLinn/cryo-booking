@@ -6,7 +6,7 @@ import { Providers } from '@/components/providers'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'TissueCryoEM core預約系統',
+  title: 'ASVET預約系統',
   description: '實驗室低溫設備線上預約管理系統',
 }
 
